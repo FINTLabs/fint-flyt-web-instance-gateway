@@ -5,6 +5,7 @@ import no.fintlabs.flyt.kafka.event.error.InstanceFlowErrorEventProducerRecord
 import no.fintlabs.flyt.kafka.headers.InstanceFlowHeaders
 import no.fintlabs.gateway.webinstance.ErrorCode
 import no.fintlabs.gateway.webinstance.exception.AbstractInstanceRejectedException
+import no.fintlabs.gateway.webinstance.exception.FileUploadException
 import no.fintlabs.gateway.webinstance.exception.IntegrationDeactivatedException
 import no.fintlabs.gateway.webinstance.exception.NoIntegrationException
 import no.fintlabs.gateway.webinstance.validation.InstanceValidationErrorMappingService
@@ -51,6 +52,31 @@ class InstanceReceivalErrorEventProducerService(
                         Error.builder()
                             .errorCode(ErrorCode.INSTANCE_REJECTED_ERROR.getCode())
                             .args(mapOf("message" to e.message))
+                            .build()
+                    )
+                )
+                .build()
+        )
+    }
+
+    fun publishInstanceFileUploadErrorEvent(
+        instanceFlowHeaders: InstanceFlowHeaders,
+        e: FileUploadException
+    ) {
+        instanceFlowErrorEventProducer.send(
+            InstanceFlowErrorEventProducerRecord.builder()
+                .topicNameParameters(instanceProcessingErrorTopicNameParameters)
+                .instanceFlowHeaders(instanceFlowHeaders)
+                .errorCollection(
+                    ErrorCollection(
+                        Error.builder()
+                            .errorCode(ErrorCode.FILE_UPLOAD_ERROR.getCode())
+                            .args(
+                                mapOf(
+                                    "name" to e.file.name,
+                                    "mediatype" to e.file.type.toString(),
+                                )
+                            )
                             .build()
                     )
                 )

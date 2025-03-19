@@ -51,15 +51,15 @@ class IntegrationRequestProducerService(
                 .defaultReplyTimeout(Duration.ofSeconds(15))
                 .build()
         )
+    }
 
-        fun get(sourceAppIntegrationIds: SourceApplicationIdAndSourceApplicationIntegrationId): Optional<Integration> {
-            return requestProducer.requestAndReceive(
-                RequestProducerRecord.builder<SourceApplicationIdAndSourceApplicationIntegrationId>()
-                    .topicNameParameters(requestTopicNameParameters)
-                    .value(sourceAppIntegrationIds)
-                    .build()
-            ).map { record -> record.value() }
-        }
+    fun get(sourceAppIntegrationIds: SourceApplicationIdAndSourceApplicationIntegrationId): Optional<Integration> {
+        return requestProducer.requestAndReceive(
+            RequestProducerRecord.builder<SourceApplicationIdAndSourceApplicationIntegrationId>()
+                .topicNameParameters(requestTopicNameParameters)
+                .value(sourceAppIntegrationIds)
+                .build()
+        ).map { record -> record.value() }
     }
 
 }

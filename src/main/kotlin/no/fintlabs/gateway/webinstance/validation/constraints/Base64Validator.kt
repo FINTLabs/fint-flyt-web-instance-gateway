@@ -4,17 +4,17 @@ import org.springframework.util.Base64Utils
 import javax.validation.ConstraintValidator
 import javax.validation.ConstraintValidatorContext
 
-class Base64Validator : ConstraintValidator<ValidBase64?, String?> {
+class Base64Validator : ConstraintValidator<ValidBase64, String> {
     override fun isValid(value: String?, context: ConstraintValidatorContext): Boolean {
         return value == null || canBeDecoded(value)
     }
 
     private fun canBeDecoded(value: String): Boolean {
-        try {
+        return try {
             Base64Utils.decodeFromString(value)
+            true
         } catch (e: IllegalArgumentException) {
-            return false
+            false
         }
-        return true
     }
 }
