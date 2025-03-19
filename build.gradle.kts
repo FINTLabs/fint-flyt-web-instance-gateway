@@ -39,7 +39,7 @@ dependencies {
 
     implementation("no.fint:fint-arkiv-resource-model-java:${apiVersion}")
 
-    implementation("no.fintlabs:fint-flyt-web-resource-server:1.0-SNAPSHOT")
+    implementation("no.fintlabs:fint-flyt-web-resource-server:0.0.1-rc-2")
 
     implementation("no.fintlabs:fint-flyt-cache:1.2.3")
     implementation("org.springframework.kafka:spring-kafka")
