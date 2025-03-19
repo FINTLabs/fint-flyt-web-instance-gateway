@@ -1,6 +1,5 @@
 package no.fintlabs.gateway.webinstance.kafka
 
-
 import no.fintlabs.flyt.kafka.event.InstanceFlowEventProducer
 import no.fintlabs.flyt.kafka.event.InstanceFlowEventProducerFactory
 import no.fintlabs.flyt.kafka.event.InstanceFlowEventProducerRecord
