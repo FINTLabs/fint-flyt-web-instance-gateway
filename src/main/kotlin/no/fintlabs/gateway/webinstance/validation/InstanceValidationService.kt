@@ -1,8 +1,8 @@
 package no.fintlabs.gateway.webinstance.validation
 
 import org.springframework.stereotype.Service
-import javax.validation.Validator
-import javax.validation.ValidatorFactory
+import jakarta.validation.Validator
+import jakarta.validation.ValidatorFactory
 import java.util.Optional
 
 @Service

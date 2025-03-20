@@ -34,11 +34,14 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework:spring-core:6.0.0")
+
+    api("org.apache.httpcomponents.client5:httpclient5:5.4.2")
 
     implementation("no.fint:fint-arkiv-resource-model-java:${apiVersion}")
 
-    implementation("no.fintlabs:fint-flyt-web-resource-server:0.0.1-rc-9")
+    implementation("no.fintlabs:fint-flyt-web-resource-server:0.0.1-rc-10")
 
     implementation("no.fintlabs:fint-flyt-cache:1.2.3")
     implementation("org.springframework.kafka:spring-kafka")

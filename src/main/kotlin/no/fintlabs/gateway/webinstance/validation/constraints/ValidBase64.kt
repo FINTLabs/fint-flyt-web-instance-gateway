@@ -1,7 +1,7 @@
 package no.fintlabs.gateway.webinstance.validation.constraints
 
-import javax.validation.Constraint
-import javax.validation.Payload
+import jakarta.validation.Constraint
+import jakarta.validation.Payload
 import kotlin.annotation.AnnotationRetention.RUNTIME
 import kotlin.annotation.AnnotationTarget.*
 import kotlin.reflect.KClass

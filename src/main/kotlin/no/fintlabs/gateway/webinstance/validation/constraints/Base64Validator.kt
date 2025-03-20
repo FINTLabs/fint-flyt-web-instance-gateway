@@ -1,8 +1,8 @@
 package no.fintlabs.gateway.webinstance.validation.constraints
 
 import org.springframework.util.Base64Utils
-import javax.validation.ConstraintValidator
-import javax.validation.ConstraintValidatorContext
+import jakarta.validation.ConstraintValidator
+import jakarta.validation.ConstraintValidatorContext
 
 class Base64Validator : ConstraintValidator<ValidBase64, String> {
     override fun isValid(value: String?, context: ConstraintValidatorContext): Boolean {

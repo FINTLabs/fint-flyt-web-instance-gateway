@@ -4,7 +4,7 @@ import io.mockk.MockKAnnotations
 import io.mockk.impl.annotations.MockK
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
-import javax.validation.ConstraintValidatorContext
+import jakarta.validation.ConstraintValidatorContext
 import kotlin.test.BeforeTest
 import kotlin.test.assertTrue
 
