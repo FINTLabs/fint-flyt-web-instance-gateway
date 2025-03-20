@@ -14,7 +14,9 @@ import no.fintlabs.kafka.event.error.Error
 import no.fintlabs.kafka.event.error.ErrorCollection
 import no.fintlabs.kafka.event.error.topic.ErrorEventTopicNameParameters
 import no.fintlabs.kafka.event.error.topic.ErrorEventTopicService
+import org.springframework.stereotype.Service
 
+@Service
 class InstanceReceivalErrorEventProducerService(
     errorEventTopicService: ErrorEventTopicService,
     private val instanceFlowErrorEventProducer: InstanceFlowErrorEventProducer,
