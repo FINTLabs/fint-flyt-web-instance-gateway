@@ -71,4 +71,8 @@ tasks.named<Jar>("jar") {
     enabled = true
 }
 
+java {
+    withSourcesJar()
+}
+
 apply(from = "https://raw.githubusercontent.com/FINTLabs/fint-buildscripts/master/reposilite.ga.gradle")
