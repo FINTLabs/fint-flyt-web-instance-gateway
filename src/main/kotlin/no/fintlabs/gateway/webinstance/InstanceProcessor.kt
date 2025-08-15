@@ -41,7 +41,7 @@ class InstanceProcessor<T : Any>(
 
     private val log: Logger = LoggerFactory.getLogger(InstanceProcessor::class.java)
 
-    fun processInstance(authentication: Authentication, incomingInstance: T): ResponseEntity<Any> {
+    fun processInstance(authentication: Authentication, incomingInstance: T): ResponseEntity<Void> {
         val headersBuilder = InstanceFlowHeaders.builder()
         val fileIds: MutableList<UUID> = ArrayList()
         var sourceApplicationId: Long
@@ -120,15 +120,15 @@ class InstanceProcessor<T : Any>(
         } catch (e: AbstractInstanceRejectedException) {
             log.error("Instance receival error", e)
             instanceReceivalErrorEventProducerService.publishInstanceRejectedErrorEvent(headersBuilder.build(), e)
-            ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(e.message)
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.message, e)
         } catch (e: FileUploadException) {
             log.error("File upload error", e)
             instanceReceivalErrorEventProducerService.publishInstanceFileUploadErrorEvent(headersBuilder.build(), e)
-            ResponseEntity.internalServerError().body(e.message)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.message, e)
         } catch (e: Exception) {
             log.error("General system error", e)
             instanceReceivalErrorEventProducerService.publishGeneralSystemErrorEvent(headersBuilder.build())
-            ResponseEntity.internalServerError().build()
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "General system error", e)
         }
     }
 }

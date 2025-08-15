@@ -20,8 +20,9 @@ import org.springframework.security.core.Authentication
 import java.util.*
 import java.util.function.Function
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
-import kotlin.test.fail
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.assertThrows
+import org.springframework.web.server.ResponseStatusException
 
 class InstanceProcessorTest {
 
@@ -92,7 +93,7 @@ class InstanceProcessorTest {
         }
 
         val incoming = Any()
-        val result: ResponseEntity<Any> = instanceProcessor.processInstance(authentication, incoming)
+        val result: ResponseEntity<Void> = instanceProcessor.processInstance(authentication, incoming)
 
         assertEquals(ResponseEntity.accepted().build(), result)
         verify(fileClient, times(1)).postFile(any())
@@ -113,7 +114,7 @@ class InstanceProcessorTest {
         }
 
         val incoming = Any()
-        val result: ResponseEntity<Any> = instanceProcessor.processInstance(authentication, incoming)
+        val result: ResponseEntity<Void> = instanceProcessor.processInstance(authentication, incoming)
 
         assertEquals(ResponseEntity.accepted().build(), result)
         verify(fileClient, times(3)).postFile(any())
@@ -135,13 +136,9 @@ class InstanceProcessorTest {
         }
 
         val incoming = Any()
-        val result: ResponseEntity<Any> = instanceProcessor.processInstance(authentication, incoming)
+        val exception = assertThrows<ResponseStatusException> { instanceProcessor.processInstance(authentication, incoming) }
 
-        assertTrue(result.statusCode.is5xxServerError)
-        assertEquals(500, result.statusCode.value())
-
-        val body = result.body ?: fail("Response body is null")
-        assertTrue(body.toString().contains("File upload failed"))
+        assertThat(exception).hasMessageContaining("File upload failed")
     }
 
 }
