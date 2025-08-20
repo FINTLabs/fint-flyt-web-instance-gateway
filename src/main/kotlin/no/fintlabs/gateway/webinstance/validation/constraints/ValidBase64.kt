@@ -3,7 +3,9 @@ package no.fintlabs.gateway.webinstance.validation.constraints
 import jakarta.validation.Constraint
 import jakarta.validation.Payload
 import kotlin.annotation.AnnotationRetention.RUNTIME
-import kotlin.annotation.AnnotationTarget.*
+import kotlin.annotation.AnnotationTarget.FIELD
+import kotlin.annotation.AnnotationTarget.PROPERTY_GETTER
+import kotlin.annotation.AnnotationTarget.VALUE_PARAMETER
 import kotlin.reflect.KClass
 
 @MustBeDocumented
@@ -13,5 +15,5 @@ import kotlin.reflect.KClass
 annotation class ValidBase64(
     val message: String = "Invalid Base64-encoded string",
     val groups: Array<KClass<*>> = [],
-    val payload: Array<KClass<out Payload>> = []
+    val payload: Array<KClass<out Payload>> = [],
 )

@@ -13,26 +13,27 @@ import org.springframework.web.util.DefaultUriBuilderFactory
 
 @Configuration
 class FileWebClientConfiguration {
-
     @Bean
     fun fileRestTemplate(
         @Value("\${fint.flyt.file-service-url}") fileServiceUrl: String,
         clientRegistrationRepository: ClientRegistrationRepository,
-        authorizedClientService: OAuth2AuthorizedClientService
+        authorizedClientService: OAuth2AuthorizedClientService,
     ): RestTemplate {
-        val requestFactory = HttpComponentsClientHttpRequestFactory().apply {
-            setConnectTimeout(300000)
-            setReadTimeout(300000)
-        }
+        val requestFactory =
+            HttpComponentsClientHttpRequestFactory().apply {
+                setConnectTimeout(300000)
+                setReadTimeout(300000)
+            }
 
-        val restTemplate = RestTemplate(requestFactory).apply {
-            uriTemplateHandler = DefaultUriBuilderFactory("$fileServiceUrl/api/intern-klient/filer")
-        }
+        val restTemplate =
+            RestTemplate(requestFactory).apply {
+                uriTemplateHandler = DefaultUriBuilderFactory("$fileServiceUrl/api/intern-klient/filer")
+            }
 
         val authorizedClientManager: OAuth2AuthorizedClientManager =
             AuthorizedClientServiceOAuth2AuthorizedClientManager(
                 clientRegistrationRepository,
-                authorizedClientService
+                authorizedClientService,
             )
 
         restTemplate.interceptors.add(OAuth2RestTemplateInterceptor(authorizedClientManager, "file-service"))

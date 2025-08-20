@@ -12,19 +12,19 @@ import no.fintlabs.kafka.requestreply.topic.RequestTopicNameParameters
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.Duration
-import java.util.*
+import java.util.Optional
 
 @Service
 class ArchiveCaseIdRequestService(
     @Value("\${fint.kafka.application-id}") applicationId: String,
     replyTopicService: ReplyTopicService,
-    requestProducerFactory: RequestProducerFactory
+    requestProducerFactory: RequestProducerFactory,
 ) {
-
     private val topicName = "archive.instance.id"
 
     private val requestTopicNameParameters: RequestTopicNameParameters =
-        RequestTopicNameParameters.builder()
+        RequestTopicNameParameters
+            .builder()
             .resource(topicName)
             .parameterName("source-application-instance-id")
             .build()
@@ -32,42 +32,46 @@ class ArchiveCaseIdRequestService(
     private final val caseIdRequestProducer: RequestProducer<ArchiveCaseIdRequestParams, String>
 
     init {
-        val replyTopicNameParameters = ReplyTopicNameParameters.builder()
-            .applicationId(applicationId)
-            .resource(topicName)
-            .build()
+        val replyTopicNameParameters =
+            ReplyTopicNameParameters
+                .builder()
+                .applicationId(applicationId)
+                .resource(topicName)
+                .build()
 
         replyTopicService.ensureTopic(
             replyTopicNameParameters,
             0,
-            TopicCleanupPolicyParameters.builder().build()
+            TopicCleanupPolicyParameters.builder().build(),
         )
 
-        caseIdRequestProducer = requestProducerFactory.createProducer(
-            replyTopicNameParameters,
-            ArchiveCaseIdRequestParams::class.java,
-            String::class.java,
-            RequestProducerConfiguration.builder()
-                .defaultReplyTimeout(Duration.ofSeconds(10))
-                .build()
-        )
+        caseIdRequestProducer =
+            requestProducerFactory.createProducer(
+                replyTopicNameParameters,
+                ArchiveCaseIdRequestParams::class.java,
+                String::class.java,
+                RequestProducerConfiguration
+                    .builder()
+                    .defaultReplyTimeout(Duration.ofSeconds(10))
+                    .build(),
+            )
     }
 
     fun getArchiveCaseId(
         sourceApplicationId: Long,
-        sourceApplicationInstanceId: String
+        sourceApplicationInstanceId: String,
     ): Optional<String> {
-        return caseIdRequestProducer.requestAndReceive(
-            RequestProducerRecord.builder<ArchiveCaseIdRequestParams>()
-                .topicNameParameters(requestTopicNameParameters)
-                .value(
-                    ArchiveCaseIdRequestParams(
-                        sourceApplicationId = sourceApplicationId,
-                        sourceApplicationInstanceId = sourceApplicationInstanceId
-                    )
-                )
-                .build()
-        ).map { consumerRecord -> consumerRecord.value() }
+        return caseIdRequestProducer
+            .requestAndReceive(
+                RequestProducerRecord
+                    .builder<ArchiveCaseIdRequestParams>()
+                    .topicNameParameters(requestTopicNameParameters)
+                    .value(
+                        ArchiveCaseIdRequestParams(
+                            sourceApplicationId = sourceApplicationId,
+                            sourceApplicationInstanceId = sourceApplicationInstanceId,
+                        ),
+                    ).build(),
+            ).map { consumerRecord -> consumerRecord.value() }
     }
-
 }

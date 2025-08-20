@@ -13,7 +13,7 @@ data class File(
     val type: MediaType,
     val encoding: String,
     @JsonProperty("contents")
-    val base64Contents: String
+    val base64Contents: String,
 ) {
     override fun toString(): String {
         return buildString {

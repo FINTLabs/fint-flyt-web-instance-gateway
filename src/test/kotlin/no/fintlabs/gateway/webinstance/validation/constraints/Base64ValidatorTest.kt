@@ -2,9 +2,9 @@ package no.fintlabs.gateway.webinstance.validation.constraints
 
 import io.mockk.MockKAnnotations
 import io.mockk.impl.annotations.MockK
+import jakarta.validation.ConstraintValidatorContext
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
-import jakarta.validation.ConstraintValidatorContext
 import kotlin.test.BeforeTest
 import kotlin.test.assertTrue
 

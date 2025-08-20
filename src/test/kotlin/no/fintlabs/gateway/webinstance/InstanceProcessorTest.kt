@@ -14,17 +14,22 @@ import org.junit.jupiter.api.Test
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
-import org.mockito.kotlin.*
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
-import java.util.*
+import java.util.Optional
+import java.util.UUID
 import java.util.function.Function
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
 class InstanceProcessorTest {
-
     @Mock
     private lateinit var integrationRequestProducerService: IntegrationRequestProducerService
 
@@ -143,5 +148,4 @@ class InstanceProcessorTest {
         val body = result.body ?: fail("Response body is null")
         assertTrue(body.toString().contains("File upload failed"))
     }
-
 }
