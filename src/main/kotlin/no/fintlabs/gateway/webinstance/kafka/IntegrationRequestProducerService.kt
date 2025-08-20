@@ -13,53 +13,60 @@ import no.fintlabs.kafka.requestreply.topic.RequestTopicNameParameters
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.Duration
-import java.util.*
+import java.util.Optional
 
 @Service
 class IntegrationRequestProducerService(
     @Value("\${fint.application-id}") applicationId: String,
     requestProducerFactory: RequestProducerFactory,
-    replyTopicService: ReplyTopicService
+    replyTopicService: ReplyTopicService,
 ) {
-
     private val topicName: String = "integration"
     private final val requestTopicNameParameters: RequestTopicNameParameters
-    private final val requestProducer: RequestProducer<SourceApplicationIdAndSourceApplicationIntegrationId, Integration>
+    private final val requestProducer:
+        RequestProducer<SourceApplicationIdAndSourceApplicationIntegrationId, Integration>
 
     init {
-        val replyTopicNameParameters = ReplyTopicNameParameters.builder()
-            .applicationId(applicationId)
-            .resource(topicName)
-            .build()
+        val replyTopicNameParameters =
+            ReplyTopicNameParameters
+                .builder()
+                .applicationId(applicationId)
+                .resource(topicName)
+                .build()
 
         replyTopicService.ensureTopic(
             replyTopicNameParameters,
             0,
-            TopicCleanupPolicyParameters.builder().build()
+            TopicCleanupPolicyParameters.builder().build(),
         )
 
-        requestTopicNameParameters = RequestTopicNameParameters.builder()
-            .resource(topicName)
-            .parameterName("source-application-id-and-source-application-integration-id")
-            .build()
-
-        requestProducer = requestProducerFactory.createProducer(
-            replyTopicNameParameters,
-            SourceApplicationIdAndSourceApplicationIntegrationId::class.java,
-            Integration::class.java,
-            RequestProducerConfiguration.builder()
-                .defaultReplyTimeout(Duration.ofSeconds(15))
+        requestTopicNameParameters =
+            RequestTopicNameParameters
+                .builder()
+                .resource(topicName)
+                .parameterName("source-application-id-and-source-application-integration-id")
                 .build()
-        )
+
+        requestProducer =
+            requestProducerFactory.createProducer(
+                replyTopicNameParameters,
+                SourceApplicationIdAndSourceApplicationIntegrationId::class.java,
+                Integration::class.java,
+                RequestProducerConfiguration
+                    .builder()
+                    .defaultReplyTimeout(Duration.ofSeconds(15))
+                    .build(),
+            )
     }
 
     fun get(sourceAppIntegrationIds: SourceApplicationIdAndSourceApplicationIntegrationId): Optional<Integration> {
-        return requestProducer.requestAndReceive(
-            RequestProducerRecord.builder<SourceApplicationIdAndSourceApplicationIntegrationId>()
-                .topicNameParameters(requestTopicNameParameters)
-                .value(sourceAppIntegrationIds)
-                .build()
-        ).map { record -> record.value() }
+        return requestProducer
+            .requestAndReceive(
+                RequestProducerRecord
+                    .builder<SourceApplicationIdAndSourceApplicationIntegrationId>()
+                    .topicNameParameters(requestTopicNameParameters)
+                    .value(sourceAppIntegrationIds)
+                    .build(),
+            ).map { record -> record.value() }
     }
-
 }
