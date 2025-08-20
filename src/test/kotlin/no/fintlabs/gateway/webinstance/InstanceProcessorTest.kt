@@ -9,8 +9,10 @@ import no.fintlabs.gateway.webinstance.model.Integration
 import no.fintlabs.gateway.webinstance.model.instance.InstanceObject
 import no.fintlabs.gateway.webinstance.validation.InstanceValidationService
 import no.fintlabs.webresourceserver.security.client.sourceapplication.SourceApplicationAuthorizationService
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
@@ -22,6 +24,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
+import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -140,12 +143,9 @@ class InstanceProcessorTest {
         }
 
         val incoming = Any()
-        val result = instanceProcessor.processInstance(authentication, incoming)
+        val exception =
+            assertThrows<ResponseStatusException> { instanceProcessor.processInstance(authentication, incoming) }
 
-        assertTrue(result.statusCode.is5xxServerError)
-        assertEquals(500, result.statusCode.value())
-
-        val body = result.body ?: fail("Response body is null")
-        assertTrue(body.toString().contains("File upload failed"))
+        assertThat(exception).hasMessageContaining("File upload failed")
     }
 }
