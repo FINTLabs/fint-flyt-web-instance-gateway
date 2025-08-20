@@ -12,8 +12,9 @@ import no.fintlabs.kafka.requestreply.topic.ReplyTopicService
 import no.fintlabs.kafka.requestreply.topic.RequestTopicNameParameters
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.util.Optional
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
 
 @Service
 class IntegrationRequestProducerService(
@@ -21,9 +22,14 @@ class IntegrationRequestProducerService(
     requestProducerFactory: RequestProducerFactory,
     replyTopicService: ReplyTopicService,
 ) {
-    private val topicName: String = "integration"
-    private final val requestTopicNameParameters: RequestTopicNameParameters
-    private final val requestProducer:
+    companion object {
+        private const val TOPIC: String = "integration"
+        private const val PARAMETER_NAME: String = "source-application-id-and-source-application-integration-id"
+        private val REPLY_TIMEOUT = 15.seconds
+    }
+
+    private lateinit var requestTopicNameParameters: RequestTopicNameParameters
+    private lateinit var requestProducer:
         RequestProducer<SourceApplicationIdAndSourceApplicationIntegrationId, Integration>
 
     init {
@@ -31,7 +37,7 @@ class IntegrationRequestProducerService(
             ReplyTopicNameParameters
                 .builder()
                 .applicationId(applicationId)
-                .resource(topicName)
+                .resource(TOPIC)
                 .build()
 
         replyTopicService.ensureTopic(
@@ -43,8 +49,8 @@ class IntegrationRequestProducerService(
         requestTopicNameParameters =
             RequestTopicNameParameters
                 .builder()
-                .resource(topicName)
-                .parameterName("source-application-id-and-source-application-integration-id")
+                .resource(TOPIC)
+                .parameterName(PARAMETER_NAME)
                 .build()
 
         requestProducer =
@@ -54,12 +60,12 @@ class IntegrationRequestProducerService(
                 Integration::class.java,
                 RequestProducerConfiguration
                     .builder()
-                    .defaultReplyTimeout(Duration.ofSeconds(15))
+                    .defaultReplyTimeout(REPLY_TIMEOUT.toJavaDuration())
                     .build(),
             )
     }
 
-    fun get(sourceAppIntegrationIds: SourceApplicationIdAndSourceApplicationIntegrationId): Optional<Integration> {
+    fun get(sourceAppIntegrationIds: SourceApplicationIdAndSourceApplicationIntegrationId): Integration? {
         return requestProducer
             .requestAndReceive(
                 RequestProducerRecord
@@ -67,6 +73,7 @@ class IntegrationRequestProducerService(
                     .topicNameParameters(requestTopicNameParameters)
                     .value(sourceAppIntegrationIds)
                     .build(),
-            ).map { record -> record.value() }
+            ).orElse(null)
+            ?.value()
     }
 }

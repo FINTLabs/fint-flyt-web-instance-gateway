@@ -6,8 +6,6 @@ import no.fintlabs.gateway.webinstance.kafka.ReceivedInstanceEventProducerServic
 import no.fintlabs.gateway.webinstance.validation.InstanceValidationService
 import no.fintlabs.webresourceserver.security.client.sourceapplication.SourceApplicationAuthorizationService
 import org.springframework.stereotype.Service
-import java.util.Optional
-import java.util.function.Function
 
 @Service
 class InstanceProcessorFactoryService(
@@ -20,36 +18,31 @@ class InstanceProcessorFactoryService(
 ) {
     fun <T : Any> createInstanceProcessor(
         sourceApplicationIntegrationId: String,
-        sourceApplicationInstanceIdFunction: Function<T, Optional<String>>,
+        sourceApplicationInstanceIdFunction: (T) -> String?,
         instanceMapper: InstanceMapper<T>,
     ): InstanceProcessor<T> {
-        val integrationIdFunction =
-            Function<T, Optional<String>> {
-                Optional.ofNullable(sourceApplicationIntegrationId)
-            }
-
         return createInstanceProcessor(
-            integrationIdFunction,
+            { _ -> sourceApplicationIntegrationId },
             sourceApplicationInstanceIdFunction,
             instanceMapper,
         )
     }
 
     fun <T : Any> createInstanceProcessor(
-        sourceApplicationIntegrationIdFunction: Function<T, Optional<String>>,
-        sourceApplicationInstanceIdFunction: Function<T, Optional<String>>,
+        sourceApplicationIntegrationIdFunction: (T) -> String?,
+        sourceApplicationInstanceIdFunction: (T) -> String?,
         instanceMapper: InstanceMapper<T>,
     ): InstanceProcessor<T> {
         return InstanceProcessor(
-            integrationRequestProducerService,
-            instanceValidationService,
-            receivedInstanceEventProducerService,
-            instanceReceivalErrorEventProducerService,
-            sourceApplicationAuthorizationService,
-            fileClient,
-            sourceApplicationIntegrationIdFunction,
-            sourceApplicationInstanceIdFunction,
-            instanceMapper,
+            integrationRequestProducerService = integrationRequestProducerService,
+            instanceValidationService = instanceValidationService,
+            receivedInstanceEventProducerService = receivedInstanceEventProducerService,
+            instanceReceivalErrorEventProducerService = instanceReceivalErrorEventProducerService,
+            sourceApplicationAuthorizationService = sourceApplicationAuthorizationService,
+            fileClient = fileClient,
+            sourceApplicationIntegrationIdFunction = sourceApplicationIntegrationIdFunction,
+            sourceApplicationInstanceIdFunction = sourceApplicationInstanceIdFunction,
+            instanceMapper = instanceMapper,
         )
     }
 }
