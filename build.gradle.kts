@@ -72,6 +72,10 @@ tasks.named<Jar>("jar") {
     enabled = true
 }
 
+java {
+    withSourcesJar()
+}
+
 ktlint {
     version.set("1.7.1")
     ignoreFailures.set(false)
