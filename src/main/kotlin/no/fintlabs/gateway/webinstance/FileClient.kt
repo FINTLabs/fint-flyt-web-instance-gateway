@@ -8,24 +8,24 @@ import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpStatusCodeException
 import org.springframework.web.client.RestTemplate
 import java.time.Duration
-import java.util.*
+import java.util.UUID
 
 @Service
 class FileClient(
-    @Qualifier("fileRestTemplate") private val fileRestTemplate: RestTemplate
+    @Qualifier("fileRestTemplate") private val fileRestTemplate: RestTemplate,
 ) {
-
     fun postFile(file: File): UUID {
         val maxRetries = 5
         var lastException: HttpStatusCodeException? = null
 
         for (attempt in 1..maxRetries) {
             try {
-                val response: ResponseEntity<UUID> = fileRestTemplate.postForEntity(
-                    "/upload",
-                    file,
-                    UUID::class.java
-                )
+                val response: ResponseEntity<UUID> =
+                    fileRestTemplate.postForEntity(
+                        "/upload",
+                        file,
+                        UUID::class.java,
+                    )
 
                 if (response.statusCode.isError) {
                     val errorBody = response.body?.toString() ?: "Unknown error"
@@ -44,9 +44,7 @@ class FileClient(
         throw FileUploadException(
             file,
             lastException?.responseBodyAsString ?: "Failed after $maxRetries attempts",
-            lastException
+            lastException,
         )
-
     }
-
 }

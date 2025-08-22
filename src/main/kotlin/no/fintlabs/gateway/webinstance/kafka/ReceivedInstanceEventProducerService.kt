@@ -12,24 +12,29 @@ import org.springframework.stereotype.Service
 @Service
 class ReceivedInstanceEventProducerService(
     instanceFlowProducerFactory: InstanceFlowEventProducerFactory,
-    eventTopicService: EventTopicService
+    eventTopicService: EventTopicService,
 ) {
-
     private val instanceProducer: InstanceFlowEventProducer<InstanceObject> =
         instanceFlowProducerFactory.createProducer(InstanceObject::class.java)
 
     private val formDefinitionEventTopicNameParameters: EventTopicNameParameters =
-        EventTopicNameParameters.builder()
+        EventTopicNameParameters
+            .builder()
             .eventName("instance-received")
-            .build().also { eventTopicService.ensureTopic(it, 15778463000L) }
+            .build()
+            .also { eventTopicService.ensureTopic(it, 15778463000L) }
 
-    fun publish(instanceFlowHeaders: InstanceFlowHeaders, instance: InstanceObject) {
+    fun publish(
+        instanceFlowHeaders: InstanceFlowHeaders,
+        instance: InstanceObject,
+    ) {
         instanceProducer.send(
-            InstanceFlowEventProducerRecord.builder<InstanceObject>()
+            InstanceFlowEventProducerRecord
+                .builder<InstanceObject>()
                 .topicNameParameters(formDefinitionEventTopicNameParameters)
                 .instanceFlowHeaders(instanceFlowHeaders)
                 .value(instance)
-                .build()
+                .build(),
         )
     }
 }

@@ -7,20 +7,18 @@ import org.springframework.stereotype.Service
 
 @Service
 class InstanceValidationErrorMappingService {
-
     fun map(instanceValidationException: InstanceValidationException): ErrorCollection =
         ErrorCollection(
             instanceValidationException.validationErrors.map { validationError ->
-                Error.builder()
+                Error
+                    .builder()
                     .errorCode(ErrorCode.INSTANCE_VALIDATION_ERROR.getCode())
                     .args(
                         mapOf(
                             "fieldPath" to validationError.fieldPath,
-                            "errorMessage" to validationError.errorMessage
-                        )
-                    )
-                    .build()
-            }
+                            "errorMessage" to validationError.errorMessage,
+                        ),
+                    ).build()
+            },
         )
-
 }

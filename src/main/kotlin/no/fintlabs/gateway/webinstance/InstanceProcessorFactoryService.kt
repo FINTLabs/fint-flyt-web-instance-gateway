@@ -6,7 +6,7 @@ import no.fintlabs.gateway.webinstance.kafka.ReceivedInstanceEventProducerServic
 import no.fintlabs.gateway.webinstance.validation.InstanceValidationService
 import no.fintlabs.webresourceserver.security.client.sourceapplication.SourceApplicationAuthorizationService
 import org.springframework.stereotype.Service
-import java.util.*
+import java.util.Optional
 import java.util.function.Function
 
 @Service
@@ -16,29 +16,29 @@ class InstanceProcessorFactoryService(
     private val receivedInstanceEventProducerService: ReceivedInstanceEventProducerService,
     private val instanceReceivalErrorEventProducerService: InstanceReceivalErrorEventProducerService,
     private val sourceApplicationAuthorizationService: SourceApplicationAuthorizationService,
-    private val fileClient: FileClient
+    private val fileClient: FileClient,
 ) {
-
     fun <T : Any> createInstanceProcessor(
         sourceApplicationIntegrationId: String,
         sourceApplicationInstanceIdFunction: Function<T, Optional<String>>,
-        instanceMapper: InstanceMapper<T>
+        instanceMapper: InstanceMapper<T>,
     ): InstanceProcessor<T> {
-        val integrationIdFunction = Function<T, Optional<String>> {
-            Optional.ofNullable(sourceApplicationIntegrationId)
-        }
+        val integrationIdFunction =
+            Function<T, Optional<String>> {
+                Optional.ofNullable(sourceApplicationIntegrationId)
+            }
 
         return createInstanceProcessor(
             integrationIdFunction,
             sourceApplicationInstanceIdFunction,
-            instanceMapper
+            instanceMapper,
         )
     }
 
     fun <T : Any> createInstanceProcessor(
         sourceApplicationIntegrationIdFunction: Function<T, Optional<String>>,
         sourceApplicationInstanceIdFunction: Function<T, Optional<String>>,
-        instanceMapper: InstanceMapper<T>
+        instanceMapper: InstanceMapper<T>,
     ): InstanceProcessor<T> {
         return InstanceProcessor(
             integrationRequestProducerService,
@@ -49,8 +49,7 @@ class InstanceProcessorFactoryService(
             fileClient,
             sourceApplicationIntegrationIdFunction,
             sourceApplicationInstanceIdFunction,
-            instanceMapper
+            instanceMapper,
         )
     }
-
 }

@@ -6,10 +6,10 @@ data class Integration(
     val sourceApplicationIntegrationId: String?,
     val destination: String?,
     val state: State,
-    var activeConfigurationId: Long?
+    var activeConfigurationId: Long?,
 ) {
     enum class State {
         ACTIVE,
-        DEACTIVATED
+        DEACTIVATED,
     }
 }

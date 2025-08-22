@@ -9,6 +9,6 @@ interface InstanceMapper<T> {
     fun map(
         sourceApplicationId: Long,
         incomingInstance: T,
-        persistFile: Function<File, UUID>
+        persistFile: Function<File, UUID>,
     ): InstanceObject
 }

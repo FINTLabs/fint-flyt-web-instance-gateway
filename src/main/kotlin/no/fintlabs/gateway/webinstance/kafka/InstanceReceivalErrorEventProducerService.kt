@@ -22,134 +22,140 @@ class InstanceReceivalErrorEventProducerService(
     private val instanceFlowErrorEventProducer: InstanceFlowErrorEventProducer,
     private val instanceValidationErrorMappingService: InstanceValidationErrorMappingService,
 ) {
-
     private val instanceProcessingErrorTopicNameParameters: ErrorEventTopicNameParameters =
-        ErrorEventTopicNameParameters.builder()
+        ErrorEventTopicNameParameters
+            .builder()
             .errorEventName("instance-receival-error")
-            .build().also { errorEventTopicService.ensureTopic(it, 0) }
+            .build()
+            .also { errorEventTopicService.ensureTopic(it, 0) }
 
     fun publishInstanceValidationErrorEvent(
         instanceFlowHeaders: InstanceFlowHeaders,
-        e: InstanceValidationException
+        e: InstanceValidationException,
     ) {
         instanceFlowErrorEventProducer.send(
-            InstanceFlowErrorEventProducerRecord.builder()
+            InstanceFlowErrorEventProducerRecord
+                .builder()
                 .topicNameParameters(instanceProcessingErrorTopicNameParameters)
                 .instanceFlowHeaders(instanceFlowHeaders)
                 .errorCollection(instanceValidationErrorMappingService.map(e))
-                .build()
+                .build(),
         )
     }
 
     fun publishInstanceRejectedErrorEvent(
         instanceFlowHeaders: InstanceFlowHeaders,
-        e: AbstractInstanceRejectedException
+        e: AbstractInstanceRejectedException,
     ) {
         instanceFlowErrorEventProducer.send(
-            InstanceFlowErrorEventProducerRecord.builder()
+            InstanceFlowErrorEventProducerRecord
+                .builder()
                 .topicNameParameters(instanceProcessingErrorTopicNameParameters)
                 .instanceFlowHeaders(instanceFlowHeaders)
                 .errorCollection(
                     ErrorCollection(
-                        Error.builder()
+                        Error
+                            .builder()
                             .errorCode(ErrorCode.INSTANCE_REJECTED_ERROR.getCode())
                             .args(mapOf("message" to e.message))
-                            .build()
-                    )
-                )
-                .build()
+                            .build(),
+                    ),
+                ).build(),
         )
     }
 
     fun publishInstanceFileUploadErrorEvent(
         instanceFlowHeaders: InstanceFlowHeaders,
-        e: FileUploadException
+        e: FileUploadException,
     ) {
         instanceFlowErrorEventProducer.send(
-            InstanceFlowErrorEventProducerRecord.builder()
+            InstanceFlowErrorEventProducerRecord
+                .builder()
                 .topicNameParameters(instanceProcessingErrorTopicNameParameters)
                 .instanceFlowHeaders(instanceFlowHeaders)
                 .errorCollection(
                     ErrorCollection(
-                        Error.builder()
+                        Error
+                            .builder()
                             .errorCode(ErrorCode.FILE_UPLOAD_ERROR.getCode())
                             .args(
                                 mapOf(
                                     "name" to e.file.name,
                                     "mediatype" to e.file.type.toString(),
-                                )
-                            )
-                            .build()
-                    )
-                )
-                .build()
+                                ),
+                            ).build(),
+                    ),
+                ).build(),
         )
     }
 
     fun publishNoIntegrationFoundErrorEvent(
         instanceFlowHeaders: InstanceFlowHeaders,
-        e: NoIntegrationException
+        e: NoIntegrationException,
     ) {
+        val integrationId = e.sourceApplicationIdAndSourceApplicationIntegrationId
         instanceFlowErrorEventProducer.send(
-            InstanceFlowErrorEventProducerRecord.builder()
+            InstanceFlowErrorEventProducerRecord
+                .builder()
                 .topicNameParameters(instanceProcessingErrorTopicNameParameters)
                 .instanceFlowHeaders(instanceFlowHeaders)
                 .errorCollection(
                     ErrorCollection(
-                        Error.builder()
+                        Error
+                            .builder()
                             .errorCode(ErrorCode.NO_INTEGRATION_FOUND_ERROR.getCode())
                             .args(
                                 mapOf(
-                                    "sourceApplicationId" to e.sourceApplicationIdAndSourceApplicationIntegrationId.sourceApplicationId.toString(),
-                                    "sourceApplicationIntegrationId" to e.sourceApplicationIdAndSourceApplicationIntegrationId.sourceApplicationIntegrationId
-                                )
-                            )
-                            .build()
-                    )
-                )
-                .build()
+                                    "sourceApplicationId" to
+                                        integrationId.sourceApplicationId.toString(),
+                                    "sourceApplicationIntegrationId" to
+                                        integrationId.sourceApplicationIntegrationId,
+                                ),
+                            ).build(),
+                    ),
+                ).build(),
         )
     }
 
     fun publishIntegrationDeactivatedErrorEvent(
         instanceFlowHeaders: InstanceFlowHeaders,
-        e: IntegrationDeactivatedException
+        e: IntegrationDeactivatedException,
     ) {
         instanceFlowErrorEventProducer.send(
-            InstanceFlowErrorEventProducerRecord.builder()
+            InstanceFlowErrorEventProducerRecord
+                .builder()
                 .topicNameParameters(instanceProcessingErrorTopicNameParameters)
                 .instanceFlowHeaders(instanceFlowHeaders)
                 .errorCollection(
                     ErrorCollection(
-                        Error.builder()
+                        Error
+                            .builder()
                             .errorCode(ErrorCode.INTEGRATION_DEACTIVATED_ERROR.getCode())
                             .args(
                                 mapOf(
                                     "sourceApplicationId" to e.integration.sourceApplicationId.toString(),
-                                    "sourceApplicationIntegrationId" to e.integration.sourceApplicationIntegrationId
-                                )
-                            )
-                            .build()
-                    )
-                )
-                .build()
+                                    "sourceApplicationIntegrationId" to e.integration.sourceApplicationIntegrationId,
+                                ),
+                            ).build(),
+                    ),
+                ).build(),
         )
     }
 
     fun publishGeneralSystemErrorEvent(instanceFlowHeaders: InstanceFlowHeaders) {
         instanceFlowErrorEventProducer.send(
-            InstanceFlowErrorEventProducerRecord.builder()
+            InstanceFlowErrorEventProducerRecord
+                .builder()
                 .topicNameParameters(instanceProcessingErrorTopicNameParameters)
                 .instanceFlowHeaders(instanceFlowHeaders)
                 .errorCollection(
                     ErrorCollection(
-                        Error.builder()
+                        Error
+                            .builder()
                             .errorCode(ErrorCode.GENERAL_SYSTEM_ERROR.getCode())
-                            .build()
-                    )
-                )
-                .build()
+                            .build(),
+                    ),
+                ).build(),
         )
     }
-
 }

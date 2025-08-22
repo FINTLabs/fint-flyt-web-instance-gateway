@@ -1,6 +1,5 @@
 package no.fintlabs.gateway.webinstance
 
-
 import no.fintlabs.flyt.kafka.headers.InstanceFlowHeaders
 import no.fintlabs.gateway.webinstance.exception.AbstractInstanceRejectedException
 import no.fintlabs.gateway.webinstance.exception.FileUploadException
@@ -21,7 +20,8 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
 import org.springframework.web.server.ResponseStatusException
-import java.util.*
+import java.util.Optional
+import java.util.UUID
 import java.util.function.Function
 
 class InstanceProcessor<T : Any>(
@@ -33,15 +33,17 @@ class InstanceProcessor<T : Any>(
     private val fileClient: FileClient,
     private val sourceApplicationIntegrationIdFunction: Function<T, Optional<String>>,
     private val sourceApplicationInstanceIdFunction: Function<T, Optional<String>>,
-    private val instanceMapper: InstanceMapper<T>
+    private val instanceMapper: InstanceMapper<T>,
 ) {
-
     @Value("\${fint.flyt.webinstance-gateway.check-integration-exists:true}")
     var checkIntegrationExists: Boolean = true
 
     private val log: Logger = LoggerFactory.getLogger(InstanceProcessor::class.java)
 
-    fun processInstance(authentication: Authentication, incomingInstance: T): ResponseEntity<Any> {
+    fun processInstance(
+        authentication: Authentication,
+        incomingInstance: T,
+    ): ResponseEntity<Any> {
         val headersBuilder = InstanceFlowHeaders.builder()
         val fileIds: MutableList<UUID> = ArrayList()
         var sourceApplicationId: Long
@@ -61,14 +63,17 @@ class InstanceProcessor<T : Any>(
 
             sourceApplicationIntegrationIdOptional.ifPresent { integrationId ->
                 if (integrationId.isNotBlank()) {
-                    val sourceApplicationIntegrationId = SourceApplicationIdAndSourceApplicationIntegrationId(
-                        sourceApplicationId = sourceApplicationId,
-                        sourceApplicationIntegrationId = integrationId
-                    )
+                    val sourceApplicationIntegrationId =
+                        SourceApplicationIdAndSourceApplicationIntegrationId(
+                            sourceApplicationId = sourceApplicationId,
+                            sourceApplicationIntegrationId = integrationId,
+                        )
 
                     if (checkIntegrationExists) {
-                        val integration = integrationRequestProducerService.get(sourceApplicationIntegrationId)
-                            .orElseThrow { NoIntegrationException(sourceApplicationIntegrationId) }
+                        val integration =
+                            integrationRequestProducerService
+                                .get(sourceApplicationIntegrationId)
+                                .orElseThrow { NoIntegrationException(sourceApplicationIntegrationId) }
                         headersBuilder.integrationId(integration.id)
                         if (integration.state == Integration.State.DEACTIVATED) {
                             throw IntegrationDeactivatedException(integration)
@@ -82,18 +87,26 @@ class InstanceProcessor<T : Any>(
             }
 
             if (sourceApplicationIntegrationIdOptional.isEmpty) {
-                throw IllegalStateException("sourceApplicationIntegrationIdOptional is empty, and was not caught in validation")
+                throw IllegalStateException(
+                    "sourceApplicationIntegrationIdOptional is empty, and was not caught in validation",
+                )
             }
             if (sourceApplicationInstanceIdOptional.isEmpty) {
-                throw IllegalStateException("sourceApplicationInstanceIdOptional is empty, and was not caught in validation")
+                throw IllegalStateException(
+                    "sourceApplicationInstanceIdOptional is empty, and was not caught in validation",
+                )
             }
-
         } catch (e: InstanceValidationException) {
             instanceReceivalErrorEventProducerService.publishInstanceValidationErrorEvent(headersBuilder.build(), e)
             throw ResponseStatusException(
                 HttpStatus.UNPROCESSABLE_ENTITY,
-                "Validation error" + if (e.validationErrors.size > 1) "s:" else ":" +
-                        e.validationErrors.joinToString { "'${it.fieldPath} ${it.errorMessage}'" }
+                "Validation error" +
+                    if (e.validationErrors.size > 1) {
+                        "s:"
+                    } else {
+                        ":" +
+                            e.validationErrors.joinToString { "'${it.fieldPath} ${it.errorMessage}'" }
+                    },
             )
         } catch (e: NoIntegrationException) {
             instanceReceivalErrorEventProducerService.publishNoIntegrationFoundErrorEvent(headersBuilder.build(), e)
@@ -107,14 +120,15 @@ class InstanceProcessor<T : Any>(
         }
 
         return try {
-            val instanceObject = instanceMapper.map(
-                sourceApplicationId,
-                incomingInstance
-            ) { file ->
-                val fileId = fileClient.postFile(file)
-                fileIds.add(fileId)
-                fileId
-            }
+            val instanceObject =
+                instanceMapper.map(
+                    sourceApplicationId,
+                    incomingInstance,
+                ) { file ->
+                    val fileId = fileClient.postFile(file)
+                    fileIds.add(fileId)
+                    fileId
+                }
             receivedInstanceEventProducerService.publish(headersBuilder.build(), instanceObject)
             ResponseEntity.accepted().build()
         } catch (e: AbstractInstanceRejectedException) {

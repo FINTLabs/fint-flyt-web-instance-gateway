@@ -6,6 +6,7 @@ plugins {
     kotlin("jvm") version "2.1.10"
     kotlin("plugin.spring") version "2.1.10"
     id("maven-publish")
+    id("org.jlleitschuh.gradle.ktlint") version "13.0.0"
 }
 
 group = "no.fintlabs"
@@ -39,7 +40,7 @@ dependencies {
 
     api("org.apache.httpcomponents.client5:httpclient5:5.4.2")
 
-    implementation("no.fint:fint-arkiv-resource-model-java:${apiVersion}")
+    implementation("no.fint:fint-arkiv-resource-model-java:$apiVersion")
 
     implementation("no.fintlabs:fint-flyt-web-resource-server:1.0.0-rc-1")
 
@@ -73,6 +74,19 @@ tasks.named<Jar>("jar") {
 
 java {
     withSourcesJar()
+}
+
+ktlint {
+    version.set("1.7.1")
+    ignoreFailures.set(false)
+    outputToConsole.set(true)
+    filter {
+        exclude("**/generated/**")
+    }
+}
+
+tasks.named("check") {
+    dependsOn("ktlintCheck")
 }
 
 apply(from = "https://raw.githubusercontent.com/FINTLabs/fint-buildscripts/master/reposilite.ga.gradle")
