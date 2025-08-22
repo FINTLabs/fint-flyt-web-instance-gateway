@@ -9,14 +9,14 @@ class Base64Validator : ConstraintValidator<ValidBase64, String> {
         value: String?,
         context: ConstraintValidatorContext,
     ): Boolean {
-        return value == null || canBeDecoded(value)
+        return value == null || isDecodable(value)
     }
 
-    private fun canBeDecoded(value: String): Boolean {
+    private fun isDecodable(value: String): Boolean {
         return try {
             Base64Utils.decodeFromString(value)
             true
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             false
         }
     }

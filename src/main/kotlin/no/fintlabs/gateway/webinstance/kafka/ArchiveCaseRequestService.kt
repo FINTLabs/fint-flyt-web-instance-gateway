@@ -11,8 +11,8 @@ import no.fintlabs.kafka.requestreply.topic.ReplyTopicService
 import no.fintlabs.kafka.requestreply.topic.RequestTopicNameParameters
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.util.Optional
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
 
 @Service
 class ArchiveCaseRequestService(
@@ -20,23 +20,27 @@ class ArchiveCaseRequestService(
     replyTopicService: ReplyTopicService,
     requestProducerFactory: RequestProducerFactory,
 ) {
-    private val topicName = "arkiv.noark.sak-with-filtered-journalposts"
+    companion object {
+        private const val TOPIC: String = "arkiv.noark.sak-with-filtered-journalposts"
+        private const val PARAMETER_NAME: String = "archive-instance-id"
+        private val REPLY_TIMEOUT = 60.seconds
+    }
 
-    private val requestTopicNameParameters: RequestTopicNameParameters =
+    private val requestTopicNameParameters =
         RequestTopicNameParameters
             .builder()
-            .resource(topicName)
-            .parameterName("archive-instance-id")
+            .resource(TOPIC)
+            .parameterName(PARAMETER_NAME)
             .build()
 
-    private final val requestProducer: RequestProducer<String, SakResource>
+    private lateinit var requestProducer: RequestProducer<String, SakResource>
 
     init {
         val replyTopicNameParameters =
             ReplyTopicNameParameters
                 .builder()
                 .applicationId(applicationId)
-                .resource(topicName)
+                .resource(TOPIC)
                 .build()
 
         replyTopicService.ensureTopic(
@@ -52,12 +56,12 @@ class ArchiveCaseRequestService(
                 SakResource::class.java,
                 RequestProducerConfiguration
                     .builder()
-                    .defaultReplyTimeout(Duration.ofSeconds(60))
+                    .defaultReplyTimeout(REPLY_TIMEOUT.toJavaDuration())
                     .build(),
             )
     }
 
-    fun getByArchiveCaseId(archiveCaseId: String): Optional<SakResource> {
+    fun getByArchiveCaseId(archiveCaseId: String): SakResource? {
         return requestProducer
             .requestAndReceive(
                 RequestProducerRecord
@@ -65,6 +69,7 @@ class ArchiveCaseRequestService(
                     .topicNameParameters(requestTopicNameParameters)
                     .value(archiveCaseId)
                     .build(),
-            ).map { it.value() }
+            ).orElse(null)
+            ?.value()
     }
 }

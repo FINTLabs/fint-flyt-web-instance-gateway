@@ -11,8 +11,8 @@ import no.fintlabs.kafka.requestreply.topic.ReplyTopicService
 import no.fintlabs.kafka.requestreply.topic.RequestTopicNameParameters
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.util.Optional
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
 
 @Service
 class ArchiveCaseIdRequestService(
@@ -20,23 +20,27 @@ class ArchiveCaseIdRequestService(
     replyTopicService: ReplyTopicService,
     requestProducerFactory: RequestProducerFactory,
 ) {
-    private val topicName = "archive.instance.id"
+    companion object {
+        private const val TOPIC: String = "archive.instance.id"
+        private const val PARAMETER_NAME: String = "source-application-instance-id"
+        private val REPLY_TIMEOUT = 10.seconds
+    }
 
-    private val requestTopicNameParameters: RequestTopicNameParameters =
+    private val requestTopicNameParameters =
         RequestTopicNameParameters
             .builder()
-            .resource(topicName)
-            .parameterName("source-application-instance-id")
+            .resource(TOPIC)
+            .parameterName(PARAMETER_NAME)
             .build()
 
-    private final val caseIdRequestProducer: RequestProducer<ArchiveCaseIdRequestParams, String>
+    private lateinit var caseIdRequestProducer: RequestProducer<ArchiveCaseIdRequestParams, String>
 
     init {
         val replyTopicNameParameters =
             ReplyTopicNameParameters
                 .builder()
                 .applicationId(applicationId)
-                .resource(topicName)
+                .resource(TOPIC)
                 .build()
 
         replyTopicService.ensureTopic(
@@ -52,7 +56,7 @@ class ArchiveCaseIdRequestService(
                 String::class.java,
                 RequestProducerConfiguration
                     .builder()
-                    .defaultReplyTimeout(Duration.ofSeconds(10))
+                    .defaultReplyTimeout(REPLY_TIMEOUT.toJavaDuration())
                     .build(),
             )
     }
@@ -60,7 +64,7 @@ class ArchiveCaseIdRequestService(
     fun getArchiveCaseId(
         sourceApplicationId: Long,
         sourceApplicationInstanceId: String,
-    ): Optional<String> {
+    ): String? {
         return caseIdRequestProducer
             .requestAndReceive(
                 RequestProducerRecord
@@ -72,6 +76,7 @@ class ArchiveCaseIdRequestService(
                             sourceApplicationInstanceId = sourceApplicationInstanceId,
                         ),
                     ).build(),
-            ).map { consumerRecord -> consumerRecord.value() }
+            ).orElse(null)
+            ?.value()
     }
 }

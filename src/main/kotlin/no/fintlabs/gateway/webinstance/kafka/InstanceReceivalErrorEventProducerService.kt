@@ -18,49 +18,65 @@ import org.springframework.stereotype.Service
 
 @Service
 class InstanceReceivalErrorEventProducerService(
-    errorEventTopicService: ErrorEventTopicService,
+    private val errorEventTopicService: ErrorEventTopicService,
     private val instanceFlowErrorEventProducer: InstanceFlowErrorEventProducer,
     private val instanceValidationErrorMappingService: InstanceValidationErrorMappingService,
 ) {
-    private val instanceProcessingErrorTopicNameParameters: ErrorEventTopicNameParameters =
+    companion object {
+        private const val ERROR_EVENT_NAME: String = "instance-receival-error"
+        private const val RETENTION_MS: Long = 0L
+    }
+
+    private val instanceReceivalErrorTopicNameParameters =
         ErrorEventTopicNameParameters
             .builder()
-            .errorEventName("instance-receival-error")
+            .errorEventName(ERROR_EVENT_NAME)
             .build()
-            .also { errorEventTopicService.ensureTopic(it, 0) }
+            .also { errorEventTopicService.ensureTopic(it, RETENTION_MS) }
+
+    private fun send(
+        headers: InstanceFlowHeaders,
+        errors: ErrorCollection,
+    ) {
+        instanceFlowErrorEventProducer.send(
+            InstanceFlowErrorEventProducerRecord
+                .builder()
+                .topicNameParameters(instanceReceivalErrorTopicNameParameters)
+                .instanceFlowHeaders(headers)
+                .errorCollection(errors)
+                .build(),
+        )
+    }
+
+    private fun singleError(
+        code: ErrorCode,
+        args: Map<String, String?> = emptyMap(),
+    ): ErrorCollection =
+        ErrorCollection(
+            Error
+                .builder()
+                .errorCode(code.getCode())
+                .args(args)
+                .build(),
+        )
 
     fun publishInstanceValidationErrorEvent(
         instanceFlowHeaders: InstanceFlowHeaders,
         e: InstanceValidationException,
     ) {
-        instanceFlowErrorEventProducer.send(
-            InstanceFlowErrorEventProducerRecord
-                .builder()
-                .topicNameParameters(instanceProcessingErrorTopicNameParameters)
-                .instanceFlowHeaders(instanceFlowHeaders)
-                .errorCollection(instanceValidationErrorMappingService.map(e))
-                .build(),
-        )
+        send(instanceFlowHeaders, instanceValidationErrorMappingService.map(e))
     }
 
     fun publishInstanceRejectedErrorEvent(
         instanceFlowHeaders: InstanceFlowHeaders,
         e: AbstractInstanceRejectedException,
     ) {
-        instanceFlowErrorEventProducer.send(
-            InstanceFlowErrorEventProducerRecord
-                .builder()
-                .topicNameParameters(instanceProcessingErrorTopicNameParameters)
-                .instanceFlowHeaders(instanceFlowHeaders)
-                .errorCollection(
-                    ErrorCollection(
-                        Error
-                            .builder()
-                            .errorCode(ErrorCode.INSTANCE_REJECTED_ERROR.getCode())
-                            .args(mapOf("message" to e.message))
-                            .build(),
-                    ),
-                ).build(),
+        send(
+            instanceFlowHeaders,
+            singleError(
+                ErrorCode.INSTANCE_REJECTED_ERROR,
+                mapOf("message" to e.message.orEmpty()),
+            ),
         )
     }
 
@@ -68,24 +84,15 @@ class InstanceReceivalErrorEventProducerService(
         instanceFlowHeaders: InstanceFlowHeaders,
         e: FileUploadException,
     ) {
-        instanceFlowErrorEventProducer.send(
-            InstanceFlowErrorEventProducerRecord
-                .builder()
-                .topicNameParameters(instanceProcessingErrorTopicNameParameters)
-                .instanceFlowHeaders(instanceFlowHeaders)
-                .errorCollection(
-                    ErrorCollection(
-                        Error
-                            .builder()
-                            .errorCode(ErrorCode.FILE_UPLOAD_ERROR.getCode())
-                            .args(
-                                mapOf(
-                                    "name" to e.file.name,
-                                    "mediatype" to e.file.type.toString(),
-                                ),
-                            ).build(),
-                    ),
-                ).build(),
+        send(
+            instanceFlowHeaders,
+            singleError(
+                ErrorCode.FILE_UPLOAD_ERROR,
+                mapOf(
+                    "name" to e.file.name,
+                    "mediatype" to e.file.type.toString(),
+                ),
+            ),
         )
     }
 
@@ -93,27 +100,16 @@ class InstanceReceivalErrorEventProducerService(
         instanceFlowHeaders: InstanceFlowHeaders,
         e: NoIntegrationException,
     ) {
-        val integrationId = e.sourceApplicationIdAndSourceApplicationIntegrationId
-        instanceFlowErrorEventProducer.send(
-            InstanceFlowErrorEventProducerRecord
-                .builder()
-                .topicNameParameters(instanceProcessingErrorTopicNameParameters)
-                .instanceFlowHeaders(instanceFlowHeaders)
-                .errorCollection(
-                    ErrorCollection(
-                        Error
-                            .builder()
-                            .errorCode(ErrorCode.NO_INTEGRATION_FOUND_ERROR.getCode())
-                            .args(
-                                mapOf(
-                                    "sourceApplicationId" to
-                                        integrationId.sourceApplicationId.toString(),
-                                    "sourceApplicationIntegrationId" to
-                                        integrationId.sourceApplicationIntegrationId,
-                                ),
-                            ).build(),
-                    ),
-                ).build(),
+        val id = e.sourceApplicationIdAndSourceApplicationIntegrationId
+        send(
+            instanceFlowHeaders,
+            singleError(
+                ErrorCode.NO_INTEGRATION_FOUND_ERROR,
+                mapOf(
+                    "sourceApplicationId" to id.sourceApplicationId.toString(),
+                    "sourceApplicationIntegrationId" to id.sourceApplicationIntegrationId,
+                ),
+            ),
         )
     }
 
@@ -121,41 +117,19 @@ class InstanceReceivalErrorEventProducerService(
         instanceFlowHeaders: InstanceFlowHeaders,
         e: IntegrationDeactivatedException,
     ) {
-        instanceFlowErrorEventProducer.send(
-            InstanceFlowErrorEventProducerRecord
-                .builder()
-                .topicNameParameters(instanceProcessingErrorTopicNameParameters)
-                .instanceFlowHeaders(instanceFlowHeaders)
-                .errorCollection(
-                    ErrorCollection(
-                        Error
-                            .builder()
-                            .errorCode(ErrorCode.INTEGRATION_DEACTIVATED_ERROR.getCode())
-                            .args(
-                                mapOf(
-                                    "sourceApplicationId" to e.integration.sourceApplicationId.toString(),
-                                    "sourceApplicationIntegrationId" to e.integration.sourceApplicationIntegrationId,
-                                ),
-                            ).build(),
-                    ),
-                ).build(),
+        send(
+            instanceFlowHeaders,
+            singleError(
+                ErrorCode.INTEGRATION_DEACTIVATED_ERROR,
+                mapOf(
+                    "sourceApplicationId" to e.integration.sourceApplicationId.toString(),
+                    "sourceApplicationIntegrationId" to e.integration.sourceApplicationIntegrationId,
+                ),
+            ),
         )
     }
 
     fun publishGeneralSystemErrorEvent(instanceFlowHeaders: InstanceFlowHeaders) {
-        instanceFlowErrorEventProducer.send(
-            InstanceFlowErrorEventProducerRecord
-                .builder()
-                .topicNameParameters(instanceProcessingErrorTopicNameParameters)
-                .instanceFlowHeaders(instanceFlowHeaders)
-                .errorCollection(
-                    ErrorCollection(
-                        Error
-                            .builder()
-                            .errorCode(ErrorCode.GENERAL_SYSTEM_ERROR.getCode())
-                            .build(),
-                    ),
-                ).build(),
-        )
+        send(instanceFlowHeaders, singleError(ErrorCode.GENERAL_SYSTEM_ERROR))
     }
 }
