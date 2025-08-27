@@ -18,7 +18,7 @@ class InstanceProcessorFactoryService(
 ) {
     fun <T : Any> createInstanceProcessor(
         sourceApplicationIntegrationId: String,
-        sourceApplicationInstanceIdFunction: (T) -> String?,
+        sourceApplicationInstanceIdFunction: (T) -> String,
         instanceMapper: InstanceMapper<T>,
     ): InstanceProcessor<T> {
         return createInstanceProcessor(
@@ -29,8 +29,8 @@ class InstanceProcessorFactoryService(
     }
 
     fun <T : Any> createInstanceProcessor(
-        sourceApplicationIntegrationIdFunction: (T) -> String?,
-        sourceApplicationInstanceIdFunction: (T) -> String?,
+        sourceApplicationIntegrationIdFunction: (T) -> String,
+        sourceApplicationInstanceIdFunction: (T) -> String,
         instanceMapper: InstanceMapper<T>,
     ): InstanceProcessor<T> {
         return InstanceProcessor(
