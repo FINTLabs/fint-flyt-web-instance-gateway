@@ -1,7 +1,7 @@
 import org.springframework.boot.gradle.plugin.SpringBootPlugin
 
 plugins {
-    id("org.springframework.boot") version "3.4.3"
+    id("org.springframework.boot") version "3.4.5"
     id("io.spring.dependency-management") version "1.1.7"
     kotlin("jvm") version "2.1.10"
     kotlin("plugin.spring") version "2.1.10"
@@ -46,8 +46,8 @@ dependencies {
 
     implementation("no.fintlabs:fint-flyt-cache:1.2.3")
     implementation("org.springframework.kafka:spring-kafka")
-    implementation("no.fintlabs:fint-kafka:4.0.1")
-    implementation("no.fintlabs:fint-flyt-kafka:3.1.1")
+    implementation("no.fintlabs:fint-kafka:5.0.0-rc-8")
+    implementation("no.fintlabs:fint-flyt-kafka:1.0-SNAPSHOT")
 
     testImplementation(kotlin("test"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -61,7 +61,7 @@ tasks.test {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
