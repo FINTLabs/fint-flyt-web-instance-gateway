@@ -10,11 +10,14 @@ import no.fintlabs.gateway.webinstance.exception.IntegrationDeactivatedException
 import no.fintlabs.gateway.webinstance.exception.NoIntegrationException
 import no.fintlabs.gateway.webinstance.validation.InstanceValidationErrorMappingService
 import no.fintlabs.gateway.webinstance.validation.InstanceValidationException
-import no.fintlabs.kafka.event.error.Error
-import no.fintlabs.kafka.event.error.ErrorCollection
-import no.fintlabs.kafka.event.error.topic.ErrorEventTopicNameParameters
-import no.fintlabs.kafka.event.error.topic.ErrorEventTopicService
+import no.fintlabs.kafka.model.Error
+import no.fintlabs.kafka.model.ErrorCollection
+import no.fintlabs.kafka.topic.ErrorEventTopicService
+import no.fintlabs.kafka.topic.configuration.CleanupFrequency
+import no.fintlabs.kafka.topic.configuration.ErrorEventTopicConfiguration
+import no.fintlabs.kafka.topic.name.ErrorEventTopicNameParameters
 import org.springframework.stereotype.Service
+import java.time.Duration
 
 @Service
 class InstanceReceivalErrorEventProducerService(
@@ -23,8 +26,9 @@ class InstanceReceivalErrorEventProducerService(
     private val instanceValidationErrorMappingService: InstanceValidationErrorMappingService,
 ) {
     companion object {
-        private const val ERROR_EVENT_NAME: String = "instance-receival-error"
-        private const val RETENTION_MS: Long = 0L
+        private const val ERROR_EVENT_NAME = "instance-receival-error"
+        private val RETENTION_MS = Duration.ZERO
+        private val CLEANUP_FREQUENCY = CleanupFrequency.NORMAL
     }
 
     private val instanceReceivalErrorTopicNameParameters =
@@ -32,7 +36,16 @@ class InstanceReceivalErrorEventProducerService(
             .builder()
             .errorEventName(ERROR_EVENT_NAME)
             .build()
-            .also { errorEventTopicService.ensureTopic(it, RETENTION_MS) }
+            .also {
+                errorEventTopicService.createOrModifyTopic(
+                    it,
+                    ErrorEventTopicConfiguration
+                        .builder()
+                        .retentionTime(RETENTION_MS)
+                        .cleanupFrequency(CLEANUP_FREQUENCY)
+                        .build(),
+                )
+            }
 
     private fun send(
         headers: InstanceFlowHeaders,
