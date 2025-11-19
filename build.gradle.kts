@@ -1,14 +1,17 @@
 import org.springframework.boot.gradle.plugin.SpringBootPlugin
 
 plugins {
-    id("org.springframework.boot") version "3.5.7"
+    id("org.springframework.boot") version "3.5.7" apply false
     id("io.spring.dependency-management") version "1.1.7"
+    id("maven-publish")
+    id("com.github.ben-manes.versions") version "0.53.0"
+    id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
     kotlin("jvm") version "2.2.21"
     kotlin("plugin.spring") version "2.2.21"
-    id("maven-publish")
-    id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
-    id("com.github.ben-manes.versions") version "0.53.0"
 }
+
+private val kotlinVersion = "2.2.21"
+extra["kotlin.version"] = kotlinVersion
 
 group = "no.novari"
 version = findProperty("version") ?: "1.0-SNAPSHOT"
@@ -30,20 +33,21 @@ dependencyManagement {
 val apiVersion: String by project
 
 dependencies {
-
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-security")
-    implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
-    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.kafka:spring-kafka")
+    implementation("org.springframework.security:spring-security-oauth2-client")
+    implementation("org.springframework.security:spring-security-core")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("com.fasterxml.jackson.module:jackson-module-parameter-names")
 
     implementation("no.fint:fint-arkiv-resource-model-java:$apiVersion")
 
     implementation("no.novari:flyt-web-resource-server:2.0.0-rc-1")
     implementation("no.novari:flyt-cache:2.0.0-rc-2")
-    implementation("no.novari:kafka:5.0.0-rc-19")
+    implementation("no.novari:kafka:5.0.0-rc-19") {
+        exclude(group = "org.springframework.boot", module = "spring-boot-starter-webflux")
+    }
     implementation("no.novari:flyt-kafka:4.0.0-rc-7")
 
     testImplementation(kotlin("test"))
@@ -59,10 +63,6 @@ tasks.test {
 
 kotlin {
     jvmToolchain(21)
-}
-
-tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
-    enabled = false
 }
 
 tasks.named<Jar>("jar") {
