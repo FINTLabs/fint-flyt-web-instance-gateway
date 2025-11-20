@@ -4,6 +4,7 @@ import no.novari.flyt.kafka.instanceflow.headers.InstanceFlowHeaders
 import no.novari.flyt.kafka.instanceflow.producing.InstanceFlowProducerRecord
 import no.novari.flyt.kafka.instanceflow.producing.InstanceFlowTemplateFactory
 import no.novari.gateway.instance.ErrorCode
+import no.novari.gateway.instance.config.properties.InstanceProcessingEventsConfigurationProperties
 import no.novari.gateway.instance.exception.AbstractInstanceRejectedException
 import no.novari.gateway.instance.exception.FileUploadException
 import no.novari.gateway.instance.exception.IntegrationDeactivatedException
@@ -13,26 +14,20 @@ import no.novari.gateway.instance.validation.InstanceValidationException
 import no.novari.kafka.model.Error
 import no.novari.kafka.model.ErrorCollection
 import no.novari.kafka.topic.ErrorEventTopicService
-import no.novari.kafka.topic.configuration.EventCleanupFrequency
 import no.novari.kafka.topic.configuration.EventTopicConfiguration
 import no.novari.kafka.topic.name.ErrorEventTopicNameParameters
 import no.novari.kafka.topic.name.TopicNamePrefixParameters
 import org.springframework.stereotype.Service
-import java.time.Duration
 
 @Service
 class InstanceReceivalErrorEventProducerService(
     errorEventTopicService: ErrorEventTopicService,
     instanceFlowTemplateFactory: InstanceFlowTemplateFactory,
     private val instanceValidationErrorMappingService: InstanceValidationErrorMappingService,
+    instanceProcessingEventsConfigurationProperties: InstanceProcessingEventsConfigurationProperties,
 ) {
     companion object {
         private const val ERROR_EVENT_NAME = "instance-receival-error"
-
-        // TODO: Correct retention time?
-        private val RETENTION_TIME = Duration.ZERO
-        private val CLEANUP_FREQUENCY = EventCleanupFrequency.NORMAL
-        private const val PARTITIONS = 1
     }
 
     private val instanceReceivalErrorTopicNameParameters =
@@ -50,13 +45,14 @@ class InstanceReceivalErrorEventProducerService(
     private val template = instanceFlowTemplateFactory.createTemplate(ErrorCollection::class.java)
 
     init {
+        // Must match setup in `fint-flyt-instance-gateway`
         errorEventTopicService.createOrModifyTopic(
             instanceReceivalErrorTopicNameParameters,
             EventTopicConfiguration
                 .stepBuilder()
-                .partitions(PARTITIONS)
-                .retentionTime(RETENTION_TIME)
-                .cleanupFrequency(CLEANUP_FREQUENCY)
+                .partitions(instanceProcessingEventsConfigurationProperties.partitions)
+                .retentionTime(instanceProcessingEventsConfigurationProperties.retentionTime)
+                .cleanupFrequency(instanceProcessingEventsConfigurationProperties.cleanupFrequency)
                 .build(),
         )
     }

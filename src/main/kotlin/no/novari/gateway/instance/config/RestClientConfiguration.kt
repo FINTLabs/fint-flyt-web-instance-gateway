@@ -1,4 +1,4 @@
-package no.novari.gateway.instance.web
+package no.novari.gateway.instance.config
 
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value

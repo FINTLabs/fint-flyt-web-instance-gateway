@@ -1,4 +1,4 @@
-package no.novari.gateway.instance.web
+package no.novari.gateway.instance.config
 
 import org.springframework.http.HttpRequest
 import org.springframework.http.client.ClientHttpRequestExecution
