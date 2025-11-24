@@ -3,6 +3,8 @@ package no.novari.gateway.instance.kafka
 import no.novari.flyt.kafka.instanceflow.headers.InstanceFlowHeaders
 import no.novari.flyt.kafka.instanceflow.producing.InstanceFlowProducerRecord
 import no.novari.flyt.kafka.instanceflow.producing.InstanceFlowTemplateFactory
+import no.novari.flyt.kafka.model.Error
+import no.novari.flyt.kafka.model.ErrorCollection
 import no.novari.gateway.instance.ErrorCode
 import no.novari.gateway.instance.config.properties.InstanceProcessingEventsConfigurationProperties
 import no.novari.gateway.instance.exception.AbstractInstanceRejectedException
@@ -11,8 +13,6 @@ import no.novari.gateway.instance.exception.IntegrationDeactivatedException
 import no.novari.gateway.instance.exception.NoIntegrationException
 import no.novari.gateway.instance.validation.InstanceValidationErrorMappingService
 import no.novari.gateway.instance.validation.InstanceValidationException
-import no.novari.kafka.model.Error
-import no.novari.kafka.model.ErrorCollection
 import no.novari.kafka.topic.ErrorEventTopicService
 import no.novari.kafka.topic.configuration.EventTopicConfiguration
 import no.novari.kafka.topic.name.ErrorEventTopicNameParameters

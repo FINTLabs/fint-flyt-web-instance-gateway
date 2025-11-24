@@ -1,8 +1,8 @@
 package no.novari.gateway.instance.validation
 
+import no.novari.flyt.kafka.model.Error
+import no.novari.flyt.kafka.model.ErrorCollection
 import no.novari.gateway.instance.ErrorCode
-import no.novari.kafka.model.Error
-import no.novari.kafka.model.ErrorCollection
 import org.springframework.stereotype.Service
 
 @Service
