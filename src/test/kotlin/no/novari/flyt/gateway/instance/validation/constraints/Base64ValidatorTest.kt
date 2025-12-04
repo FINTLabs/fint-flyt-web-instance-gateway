@@ -1,8 +1,9 @@
-package no.novari.gateway.instance.validation.constraints
+package no.novari.flyt.gateway.instance.validation.constraints
 
 import io.mockk.MockKAnnotations
 import io.mockk.impl.annotations.MockK
 import jakarta.validation.ConstraintValidatorContext
+import no.novari.gateway.instance.validation.constraints.Base64Validator
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -76,7 +77,7 @@ class Base64ValidatorTest {
                 "AA\tA",
                 // newline inside
                 "AA\nA",
-                // hyphen not allowed in standard base64
+                // hyphen isn't allowed in standard base64
                 "AA-A",
                 // three padding characters
                 "A===",

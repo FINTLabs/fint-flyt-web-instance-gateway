@@ -1,7 +1,13 @@
+import org.gradle.authentication.http.BasicAuthentication
 import org.springframework.boot.gradle.plugin.SpringBootPlugin
 
+object Versions {
+    const val KOTLIN = "2.2.21"
+    const val FINT_MODEL = "3.21.10"
+}
+
 plugins {
-    id("org.springframework.boot") version "3.5.7" apply false
+    id("org.springframework.boot") version "3.5.8" apply false
     id("io.spring.dependency-management") version "1.1.7"
     id("maven-publish")
     id("com.github.ben-manes.versions") version "0.53.0"
@@ -10,18 +16,17 @@ plugins {
     kotlin("plugin.spring") version "2.2.21"
 }
 
-private val kotlinVersion = "2.2.21"
-extra["kotlin.version"] = kotlinVersion
-
 group = "no.novari"
 version = findProperty("version") ?: "1.0-SNAPSHOT"
 
-var fintModelVersion = "3.21.10"
+extra["kotlin.version"] = Versions.KOTLIN
+
+private val fintLabsRepo = uri("https://repo.fintlabs.no/releases")
 
 repositories {
     mavenLocal()
     maven {
-        url = uri("https://repo.fintlabs.no/releases")
+        url = fintLabsRepo
     }
     mavenCentral()
 }
@@ -41,12 +46,13 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("com.fasterxml.jackson.module:jackson-module-parameter-names")
+    implementation("org.apache.httpcomponents.client5:httpclient5")
 
-    implementation("no.fint:fint-arkiv-resource-model-java:$fintModelVersion")
-    implementation("no.novari:flyt-web-resource-server:2.0.0-rc-2")
-    implementation("no.novari:flyt-cache:2.0.0-rc-2")
-    implementation("no.novari:kafka:5.0.0-rc-20")
-    implementation("no.novari:flyt-kafka:4.0.0-rc-8")
+    implementation("no.fint:fint-arkiv-resource-model-java:${Versions.FINT_MODEL}")
+    implementation("no.novari:flyt-web-resource-server:2.0.0-rc-4")
+    implementation("no.novari:flyt-cache:2.0.1")
+    implementation("no.novari:kafka:5.0.0")
+    implementation("no.novari:flyt-kafka:4.0.0")
 
     testImplementation(kotlin("test"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -55,7 +61,7 @@ dependencies {
     testImplementation("org.mockito.kotlin:mockito-kotlin:6.1.0")
 }
 
-tasks.test {
+tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }
 
@@ -78,7 +84,7 @@ tasks.named("check") {
 publishing {
     repositories {
         maven {
-            url = uri("https://repo.fintlabs.no/releases")
+            url = fintLabsRepo
             credentials {
                 username = System.getenv("REPOSILITE_USERNAME")
                 password = System.getenv("REPOSILITE_PASSWORD")

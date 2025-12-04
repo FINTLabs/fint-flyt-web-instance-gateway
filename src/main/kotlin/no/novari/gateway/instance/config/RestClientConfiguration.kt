@@ -1,5 +1,9 @@
 package no.novari.gateway.instance.config
 
+import org.apache.hc.client5.http.config.ConnectionConfig
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder
+import org.apache.hc.core5.util.Timeout
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfiguration
@@ -15,17 +19,27 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
 import org.springframework.web.client.RestClient
 import java.net.URI
-import java.time.Duration
 
 @AutoConfiguration
 @EnableRetry
 class RestClientConfiguration {
     @Bean("fileClientHttpRequestFactory")
     fun fileClientHttpRequestFactory(): ClientHttpRequestFactory =
-        HttpComponentsClientHttpRequestFactory().apply {
-            setConnectTimeout(Duration.ofSeconds(300))
-            setReadTimeout(Duration.ofSeconds(300))
-        }
+        HttpComponentsClientHttpRequestFactory(
+            HttpClientBuilder
+                .create()
+                .setConnectionManager(
+                    PoolingHttpClientConnectionManagerBuilder
+                        .create()
+                        .setDefaultConnectionConfig(
+                            ConnectionConfig
+                                .custom()
+                                .setConnectTimeout(Timeout.ofSeconds(300))
+                                .setSocketTimeout(Timeout.ofSeconds(300))
+                                .build(),
+                        ).build(),
+                ).build(),
+        )
 
     @Bean("fileAuthorizedClientManager")
     fun fileAuthorizedClientManager(
