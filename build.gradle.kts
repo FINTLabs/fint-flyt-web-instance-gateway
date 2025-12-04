@@ -49,10 +49,10 @@ dependencies {
     implementation("org.apache.httpcomponents.client5:httpclient5")
 
     implementation("no.fint:fint-arkiv-resource-model-java:${Versions.FINT_MODEL}")
-    implementation("no.novari:flyt-web-resource-server:2.0.0-rc-4")
-    implementation("no.novari:flyt-cache:2.0.1")
-    implementation("no.novari:kafka:5.0.0")
-    implementation("no.novari:flyt-kafka:4.0.0")
+    api("no.novari:flyt-web-resource-server:2.0.0-rc-4")
+    api("no.novari:kafka:5.0.0")
+    api("no.novari:flyt-kafka:4.0.0")
+    api("no.novari:flyt-cache:2.0.1")
 
     testImplementation(kotlin("test"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
