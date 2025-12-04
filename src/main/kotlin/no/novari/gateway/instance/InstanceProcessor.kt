@@ -1,7 +1,7 @@
 package no.novari.gateway.instance
 
 import no.novari.flyt.kafka.instanceflow.headers.InstanceFlowHeaders
-import no.novari.flyt.resourceserver.security.client.sourceapplication.SourceApplicationAuthorizationService
+import no.novari.flyt.webresourceserver.security.client.sourceapplication.SourceApplicationAuthorizationService
 import no.novari.gateway.instance.exception.AbstractInstanceRejectedException
 import no.novari.gateway.instance.exception.FileUploadException
 import no.novari.gateway.instance.exception.IntegrationDeactivatedException

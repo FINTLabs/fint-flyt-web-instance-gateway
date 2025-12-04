@@ -1,6 +1,6 @@
 package no.novari.gateway.instance
 
-import no.novari.flyt.resourceserver.security.client.sourceapplication.SourceApplicationAuthorizationService
+import no.novari.flyt.webresourceserver.security.client.sourceapplication.SourceApplicationAuthorizationService
 import no.novari.gateway.instance.kafka.InstanceReceivalErrorEventProducerService
 import no.novari.gateway.instance.kafka.IntegrationRequestProducerService
 import no.novari.gateway.instance.kafka.ReceivedInstanceEventProducerService

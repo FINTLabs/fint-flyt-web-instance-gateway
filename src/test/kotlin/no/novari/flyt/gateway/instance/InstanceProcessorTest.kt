@@ -1,6 +1,6 @@
 package no.novari.flyt.gateway.instance
 
-import no.novari.flyt.resourceserver.security.client.sourceapplication.SourceApplicationAuthorizationService
+import no.novari.flyt.webresourceserver.security.client.sourceapplication.SourceApplicationAuthorizationService
 import no.novari.gateway.instance.FileClient
 import no.novari.gateway.instance.InstanceMapper
 import no.novari.gateway.instance.InstanceProcessor
