@@ -39,7 +39,6 @@ dependencyManagement {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
-    implementation("org.springframework.kafka:spring-kafka")
     implementation("org.springframework.security:spring-security-oauth2-client")
 
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
@@ -48,7 +47,7 @@ dependencies {
     implementation("org.apache.httpcomponents.client5:httpclient5")
 
     implementation("no.fint:fint-arkiv-resource-model-java:${Versions.FINT_MODEL}")
-    api("no.novari:flyt-web-resource-server:2.0.0-rc-6")
+    api("no.novari:flyt-web-resource-server:2.0.0-rc-7")
     api("no.novari:flyt-kafka:4.0.0")
 
     testImplementation(kotlin("test"))
