@@ -1,1 +1,2 @@
-no.novari.gateway.webinstance.config.RestClientConfiguration
+no.novari.flyt.gateway.webinstance.config.KafkaConfiguration
+no.novari.flyt.gateway.webinstance.config.RestClientConfiguration

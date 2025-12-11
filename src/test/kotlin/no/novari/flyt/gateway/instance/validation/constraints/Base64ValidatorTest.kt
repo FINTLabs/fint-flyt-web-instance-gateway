@@ -3,7 +3,7 @@ package no.novari.flyt.gateway.instance.validation.constraints
 import io.mockk.MockKAnnotations
 import io.mockk.impl.annotations.MockK
 import jakarta.validation.ConstraintValidatorContext
-import no.novari.gateway.webinstance.validation.constraints.Base64Validator
+import no.novari.flyt.gateway.webinstance.validation.constraints.Base64Validator
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach

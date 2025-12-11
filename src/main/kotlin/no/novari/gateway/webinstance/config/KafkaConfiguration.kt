@@ -1,9 +1,0 @@
-package no.novari.gateway.webinstance.config
-
-import no.novari.gateway.webinstance.config.properties.InstanceProcessingEventsConfigurationProperties
-import org.springframework.boot.autoconfigure.AutoConfiguration
-import org.springframework.boot.context.properties.EnableConfigurationProperties
-
-@EnableConfigurationProperties(InstanceProcessingEventsConfigurationProperties::class)
-@AutoConfiguration
-class KafkaConfiguration
