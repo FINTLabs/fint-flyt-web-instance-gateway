@@ -1,6 +1,6 @@
 novari:
     flyt:
-        instance-gateway:
+        web-instance-gateway:
             kafka:
                 topic:
                     instance-receival-error:
