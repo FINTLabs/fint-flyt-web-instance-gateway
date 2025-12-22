@@ -1,0 +1,9 @@
+novari:
+    flyt:
+        web-instance-gateway:
+            kafka:
+                topic:
+                    instance-receival-error:
+                        retention-time: "4d"
+                        cleanup-frequency: NORMAL
+                        partitions: 1

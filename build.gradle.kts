@@ -1,21 +1,32 @@
+import org.gradle.authentication.http.BasicAuthentication
 import org.springframework.boot.gradle.plugin.SpringBootPlugin
 
-plugins {
-    id("org.springframework.boot") version "3.4.3"
-    id("io.spring.dependency-management") version "1.1.7"
-    kotlin("jvm") version "2.1.10"
-    kotlin("plugin.spring") version "2.1.10"
-    id("maven-publish")
-    id("org.jlleitschuh.gradle.ktlint") version "13.0.0"
+object Versions {
+    const val KOTLIN = "2.2.21"
+    const val FINT_MODEL = "3.21.10"
 }
 
-group = "no.fintlabs"
+plugins {
+    id("org.springframework.boot") version "3.5.8" apply false
+    id("io.spring.dependency-management") version "1.1.7"
+    id("maven-publish")
+    id("com.github.ben-manes.versions") version "0.53.0"
+    id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
+    kotlin("jvm") version "2.2.21"
+    kotlin("plugin.spring") version "2.2.21"
+}
+
+group = "no.novari"
 version = findProperty("version") ?: "1.0-SNAPSHOT"
+
+extra["kotlin.version"] = Versions.KOTLIN
+
+private val fintLabsRepo = uri("https://repo.fintlabs.no/releases")
 
 repositories {
     mavenLocal()
     maven {
-        url = uri("https://repo.fintlabs.no/releases")
+        url = fintLabsRepo
     }
     mavenCentral()
 }
@@ -26,46 +37,33 @@ dependencyManagement {
     }
 }
 
-val apiVersion: String by project
-
 dependencies {
-
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-security")
-    implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
-    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("org.springframework.boot:spring-boot-starter-validation")
-    implementation("org.springframework:spring-core:6.0.0")
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.security:spring-security-oauth2-client")
 
-    api("org.apache.httpcomponents.client5:httpclient5:5.4.2")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("com.fasterxml.jackson.module:jackson-module-parameter-names")
+    implementation("org.apache.httpcomponents.client5:httpclient5")
 
-    implementation("no.fint:fint-arkiv-resource-model-java:$apiVersion")
-
-    implementation("no.fintlabs:fint-flyt-web-resource-server:1.0.0-rc-1")
-
-    implementation("no.fintlabs:fint-flyt-cache:1.2.3")
-    implementation("org.springframework.kafka:spring-kafka")
-    implementation("no.fintlabs:fint-kafka:4.0.1")
-    implementation("no.fintlabs:fint-flyt-kafka:3.1.1")
+    implementation("no.fint:fint-arkiv-resource-model-java:${Versions.FINT_MODEL}")
+    api("no.novari:flyt-web-resource-server:2.0.0-rc-7")
+    api("no.novari:flyt-kafka:4.0.0")
 
     testImplementation(kotlin("test"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("com.ninja-squad:springmockk:4.0.2")
-    testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:6.1.0")
 }
 
-tasks.test {
+tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }
 
 kotlin {
-    jvmToolchain(17)
-}
-
-tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
-    enabled = false
+    jvmToolchain(21)
 }
 
 tasks.named<Jar>("jar") {
@@ -76,17 +74,26 @@ java {
     withSourcesJar()
 }
 
-ktlint {
-    version.set("1.7.1")
-    ignoreFailures.set(false)
-    outputToConsole.set(true)
-    filter {
-        exclude("**/generated/**")
-    }
-}
-
 tasks.named("check") {
     dependsOn("ktlintCheck")
 }
 
-apply(from = "https://raw.githubusercontent.com/FINTLabs/fint-buildscripts/master/reposilite.ga.gradle")
+publishing {
+    repositories {
+        maven {
+            url = fintLabsRepo
+            credentials {
+                username = System.getenv("REPOSILITE_USERNAME")
+                password = System.getenv("REPOSILITE_PASSWORD")
+            }
+            authentication {
+                create<BasicAuthentication>("basic")
+            }
+        }
+    }
+    publications {
+        create<MavenPublication>("maven") {
+            from(components["java"])
+        }
+    }
+}
