@@ -39,6 +39,7 @@ dependencyManagement {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.security:spring-security-oauth2-client")
 
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
