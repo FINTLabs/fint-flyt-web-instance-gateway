@@ -48,7 +48,7 @@ dependencies {
     implementation("org.apache.httpcomponents.client5:httpclient5")
 
     implementation("no.fint:fint-arkiv-resource-model-java:${Versions.FINT_MODEL}")
-    api("no.novari:flyt-web-resource-server:2.0.0-rc-7")
+    api("no.novari:flyt-web-resource-server:2.0.0")
     api("no.novari:flyt-kafka:4.0.0")
 
     testImplementation(kotlin("test"))
