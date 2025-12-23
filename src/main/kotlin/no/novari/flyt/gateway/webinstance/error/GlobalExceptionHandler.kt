@@ -3,8 +3,11 @@ package no.novari.flyt.gateway.webinstance.error
 import com.fasterxml.jackson.databind.exc.InvalidNullException
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import jakarta.servlet.http.HttpServletRequest
+import jakarta.validation.UnexpectedTypeException
+import jakarta.validation.ValidationException
 import no.novari.flyt.gateway.webinstance.exception.IntegrationDeactivatedException
 import no.novari.flyt.gateway.webinstance.exception.NoIntegrationException
+import org.slf4j.LoggerFactory
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.http.HttpStatus
@@ -19,6 +22,8 @@ import java.time.OffsetDateTime
 @RestControllerAdvice
 @Order(Ordered.LOWEST_PRECEDENCE)
 class GlobalExceptionHandler {
+    private val log = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
+
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidation(
         ex: MethodArgumentNotValidException,
@@ -37,6 +42,19 @@ class GlobalExceptionHandler {
         request: HttpServletRequest,
     ): ResponseEntity<ErrorResponse> {
         return buildError(HttpStatus.BAD_REQUEST, buildNotReadableMessage(ex), request.requestURI)
+    }
+
+    @ExceptionHandler(ValidationException::class)
+    fun handleValidationException(
+        ex: ValidationException,
+        request: HttpServletRequest,
+    ): ResponseEntity<ErrorResponse> {
+        val message =
+            when (ex) {
+                is UnexpectedTypeException -> "Ugyldig valideringsregel for felt. Kontakt systemansvarlig."
+                else -> "Ugyldig forespørsel. Se feltfeil for detaljer."
+            }
+        return buildError(HttpStatus.BAD_REQUEST, message, request.requestURI)
     }
 
     @ExceptionHandler(NoIntegrationException::class)
@@ -69,6 +87,7 @@ class GlobalExceptionHandler {
         ex: Exception,
         request: HttpServletRequest,
     ): ResponseEntity<ErrorResponse> {
+        log.error("Unexpected error while handling request: {}", request.requestURI, ex)
         return buildError(
             HttpStatus.INTERNAL_SERVER_ERROR,
             "En uventet feil oppsto. Prøv igjen senere.",
