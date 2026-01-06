@@ -75,7 +75,19 @@ java {
 }
 
 tasks.named("check") {
-    dependsOn("ktlintCheck")
+    val skipKtlint =
+        (findProperty("skipKtlint") as String?)?.toBoolean()
+            ?: (System.getenv("SKIP_KTLINT") == "true")
+    if (!skipKtlint) {
+        dependsOn("ktlintCheck")
+    }
+}
+
+tasks.matching { it.name.startsWith("ktlint") }.configureEach {
+    val skipKtlint =
+        (findProperty("skipKtlint") as String?)?.toBoolean()
+            ?: (System.getenv("SKIP_KTLINT") == "true")
+    enabled = !skipKtlint
 }
 
 publishing {
