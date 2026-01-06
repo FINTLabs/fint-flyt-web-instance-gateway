@@ -28,6 +28,7 @@ repositories {
     maven {
         url = fintLabsRepo
     }
+    mavenCentral()
 }
 
 dependencyManagement {
