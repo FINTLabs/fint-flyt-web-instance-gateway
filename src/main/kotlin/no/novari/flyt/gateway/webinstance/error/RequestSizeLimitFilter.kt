@@ -24,7 +24,6 @@ class RequestSizeLimitFilter(
     @Value("\${spring.http.codecs.max-in-memory-size}") maxInMemorySize: DataSize,
     private val objectMapper: ObjectMapper,
 ) : OncePerRequestFilter() {
-
     private val maxInMemoryBytes = maxInMemorySize.toBytes()
 
     override fun doFilterInternal(
