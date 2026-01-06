@@ -28,9 +28,6 @@ repositories {
     maven {
         url = fintLabsRepo
     }
-    maven {
-        url = uri("https://repo1.maven.org/maven2/")
-    }
 }
 
 dependencyManagement {
