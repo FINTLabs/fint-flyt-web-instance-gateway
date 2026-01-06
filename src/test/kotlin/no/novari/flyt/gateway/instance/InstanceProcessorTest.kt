@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.InjectMocks
 import org.mockito.Mock
+import org.mockito.Mockito.never
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
@@ -127,6 +128,20 @@ class InstanceProcessorTest {
         assertEquals(ResponseEntity.accepted().build(), result)
         verify(fileClient, times(3)).postFile(any())
         verify(receivedInstanceEventProducerService, times(1)).publish(any(), eq(instanceObject))
+    }
+
+    @Test
+    fun shouldProcessInstanceWithSourceApplicationIdParameter() {
+        val sourceApplicationId = 456L
+
+        whenever(instanceMapper.map(any(), any(), any())).thenReturn(instanceObject)
+
+        val incoming = Any()
+        val result = instanceProcessor.processInstance(sourceApplicationId, incoming)
+
+        assertEquals(ResponseEntity.accepted().build(), result)
+        verify(instanceMapper, times(1)).map(eq(sourceApplicationId), any(), any())
+        verify(sourceApplicationAuthorizationService, never()).getSourceApplicationId(any())
     }
 
     @Test
