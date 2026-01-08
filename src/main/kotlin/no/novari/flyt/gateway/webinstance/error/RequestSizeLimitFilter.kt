@@ -41,6 +41,7 @@ class RequestSizeLimitFilter(
                 contentLength,
                 maxInMemoryBytes,
             )
+            discardRequestBody(request)
             response.status = HttpStatus.PAYLOAD_TOO_LARGE.value()
             response.contentType = MediaType.APPLICATION_JSON_VALUE
             response.characterEncoding = StandardCharsets.UTF_8.name()
@@ -51,6 +52,17 @@ class RequestSizeLimitFilter(
             return
         }
         filterChain.doFilter(request, response)
+    }
+
+    private fun discardRequestBody(request: HttpServletRequest) {
+        try {
+            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+            val input = request.inputStream
+            while (input.read(buffer) != -1) {
+                // Discard
+            }
+        } catch (_: Exception) {
+        }
     }
 
     private fun serializeBody(): ByteArray {

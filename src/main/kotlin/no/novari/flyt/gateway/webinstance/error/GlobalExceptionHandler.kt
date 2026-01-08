@@ -43,6 +43,7 @@ class GlobalExceptionHandler {
         ex: HttpMessageNotReadableException,
         request: HttpServletRequest,
     ): ResponseEntity<ErrorResponse> {
+        discardRequestBody(request)
         return buildError(HttpStatus.BAD_REQUEST, buildNotReadableMessage(ex), request.requestURI)
     }
 
@@ -163,5 +164,15 @@ class GlobalExceptionHandler {
             }
         }
         return "Ugyldig forespørsel. Mangler påkrevde felter eller ugyldig JSON."
+    }
+
+    private fun discardRequestBody(request: HttpServletRequest) {
+        try {
+            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+            val input = request.inputStream
+            while (input.read(buffer) != -1) {
+            }
+        } catch (_: Exception) {
+        }
     }
 }
