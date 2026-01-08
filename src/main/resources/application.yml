@@ -1,6 +1,11 @@
+server:
+    tomcat:
+        max-swallow-size: 100MB
+
 novari:
     flyt:
         web-instance-gateway:
+            max-request-size: 100MB
             kafka:
                 topic:
                     instance-receival-error:

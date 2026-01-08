@@ -19,9 +19,9 @@ import java.nio.charset.StandardCharsets
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@ConditionalOnProperty("spring.http.codecs.max-in-memory-size")
+@ConditionalOnProperty("novari.flyt.web-instance-gateway.max-request-size")
 class RequestSizeLimitFilter(
-    @Value("\${spring.http.codecs.max-in-memory-size}") maxInMemorySize: DataSize,
+    @Value("\${novari.flyt.web-instance-gateway.max-request-size}") maxInMemorySize: DataSize,
     private val objectMapper: ObjectMapper,
 ) : OncePerRequestFilter() {
     private val maxInMemoryBytes = maxInMemorySize.toBytes()
