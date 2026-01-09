@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.http.HttpStatus
@@ -19,9 +18,8 @@ import java.nio.charset.StandardCharsets
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@ConditionalOnProperty("novari.flyt.web-instance-gateway.max-request-size")
 class RequestSizeLimitFilter(
-    @Value("\${novari.flyt.web-instance-gateway.max-request-size}") maxInMemorySize: DataSize,
+    @Value("\${novari.flyt.web-instance-gateway.max-request-size:100MB}") maxInMemorySize: DataSize,
     private val objectMapper: ObjectMapper,
 ) : OncePerRequestFilter() {
     private val maxInMemoryBytes = maxInMemorySize.toBytes()
