@@ -10,6 +10,7 @@ import no.novari.flyt.gateway.webinstance.exception.NoIntegrationException
 import org.slf4j.LoggerFactory
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
+import org.springframework.core.io.buffer.DataBufferLimitException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
@@ -17,6 +18,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.ResponseStatusException
+import org.springframework.web.server.ServerWebInputException
 import java.time.OffsetDateTime
 
 @RestControllerAdvice
@@ -41,6 +43,7 @@ class GlobalExceptionHandler {
         ex: HttpMessageNotReadableException,
         request: HttpServletRequest,
     ): ResponseEntity<ErrorResponse> {
+        discardRequestBody(request)
         return buildError(HttpStatus.BAD_REQUEST, buildNotReadableMessage(ex), request.requestURI)
     }
 
@@ -71,6 +74,39 @@ class GlobalExceptionHandler {
         request: HttpServletRequest,
     ): ResponseEntity<ErrorResponse> {
         return buildError(HttpStatus.UNPROCESSABLE_ENTITY, ex.message, request.requestURI)
+    }
+
+    @ExceptionHandler(DataBufferLimitException::class)
+    fun handleDataBufferLimitException(
+        ex: DataBufferLimitException,
+        request: HttpServletRequest,
+    ): ResponseEntity<Map<String, String>> {
+        val url = ErrorResponseUtils.resolveFullUrl(request)
+        log.warn("Payload too large for {} {}: {}", request.method, url, ex.message)
+        return ResponseEntity
+            .status(HttpStatus.PAYLOAD_TOO_LARGE)
+            .body(ErrorResponseUtils.payloadTooLargeBody)
+    }
+
+    @ExceptionHandler(ServerWebInputException::class)
+    fun handleServerWebInputException(
+        ex: ServerWebInputException,
+        request: HttpServletRequest,
+    ): ResponseEntity<Map<String, String>> {
+        val cause = ex.cause
+        if (cause is DataBufferLimitException) {
+            return handleDataBufferLimitException(cause, request)
+        }
+        val url = ErrorResponseUtils.resolveFullUrl(request)
+        log.warn("Bad request for {} {}: {}", request.method, url, ex.message)
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(
+                mapOf(
+                    "error" to "bad_request",
+                    "message" to "Malformed request.",
+                ),
+            )
     }
 
     @ExceptionHandler(ResponseStatusException::class)
@@ -128,5 +164,15 @@ class GlobalExceptionHandler {
             }
         }
         return "Ugyldig forespørsel. Mangler påkrevde felter eller ugyldig JSON."
+    }
+
+    private fun discardRequestBody(request: HttpServletRequest) {
+        try {
+            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+            val input = request.inputStream
+            while (input.read(buffer) != -1) {
+            }
+        } catch (_: Exception) {
+        }
     }
 }

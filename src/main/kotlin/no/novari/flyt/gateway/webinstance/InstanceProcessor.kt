@@ -40,12 +40,28 @@ class InstanceProcessor<T : Any>(
         authentication: Authentication,
         incomingInstance: T,
     ): ResponseEntity<Void> {
+        return processInstance(incomingInstance) {
+            sourceApplicationAuthorizationService.getSourceApplicationId(authentication)
+        }
+    }
+
+    fun processInstance(
+        sourceApplicationId: Long,
+        incomingInstance: T,
+    ): ResponseEntity<Void> {
+        return processInstance(incomingInstance) { sourceApplicationId }
+    }
+
+    private fun processInstance(
+        incomingInstance: T,
+        sourceApplicationIdSupplier: () -> Long,
+    ): ResponseEntity<Void> {
         val headersBuilder = InstanceFlowHeaders.builder()
         val fileIds = mutableListOf<UUID>()
-        var sourceApplicationId: Long
+        val sourceApplicationId: Long
 
         try {
-            sourceApplicationId = sourceApplicationAuthorizationService.getSourceApplicationId(authentication)
+            sourceApplicationId = sourceApplicationIdSupplier()
 
             val sourceApplicationIntegrationId = sourceApplicationIntegrationIdFunction(incomingInstance)
             val sourceApplicationInstanceId = sourceApplicationInstanceIdFunction(incomingInstance)
