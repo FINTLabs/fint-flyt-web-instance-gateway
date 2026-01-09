@@ -14,34 +14,52 @@ object ErrorResponseUtils {
         "{\"error\":\"payload_too_large\",\"message\":\"Request payload exceeds configured limit.\"}"
             .toByteArray(StandardCharsets.UTF_8)
 
-    fun resolveFullUrl(request: HttpServletRequest): String {
-        val forwardedProto = request.getHeader("X-Forwarded-Proto")
-        val forwardedHost = request.getHeader("X-Forwarded-Host")
-        val forwardedPort = request.getHeader("X-Forwarded-Port")
+fun resolveFullUrl(request: HttpServletRequest): String {
+    val forwardedProto = request.getHeader("X-Forwarded-Proto")
+    val forwardedHost = request.getHeader("X-Forwarded-Host")
+    val forwardedPort = request.getHeader("X-Forwarded-Port")
 
-        if (forwardedProto == null && forwardedHost == null && forwardedPort == null) {
-            val base = request.requestURL.toString()
-            val query = request.queryString
-            return if (query.isNullOrBlank()) base else "$base?$query"
-        }
+    val hasForwardedHeaders =
+        forwardedProto != null || forwardedHost != null || forwardedPort != null
 
-        val scheme = forwardedProto ?: request.scheme ?: "http"
-        val host = forwardedHost ?: request.serverName
-        val port = forwardedPort ?: request.serverPort.takeIf { it > 0 }?.toString()
-
-        val url = StringBuilder()
-        url.append(scheme).append("://")
-        if (!host.isNullOrBlank()) {
-            url.append(host)
-        }
-        if (port != null && !host.contains(":") && port != "80" && port != "443") {
-            url.append(":").append(port)
-        }
-        url.append(request.requestURI)
-        val query = request.queryString
-        if (!query.isNullOrBlank()) {
-            url.append("?").append(query)
-        }
-        return url.toString()
+    if (!hasForwardedHeaders) {
+        val base = request.requestURL.toString()
+        return request.queryString
+            ?.takeIf { it.isNotBlank() }
+            ?.let { "$base?$it" }
+            ?: base
     }
+
+    val scheme = forwardedProto ?: request.scheme ?: "http"
+    val host = forwardedHost ?: request.serverName
+    val port = forwardedPort
+        ?: request.serverPort
+            .takeIf { it > 0 }
+            ?.toString()
+
+    return buildString {
+        append(scheme)
+        append("://")
+        append(host)
+
+        if (
+            port != null &&
+            !host.contains(":") &&
+            port != "80" &&
+            port != "443"
+        ) {
+            append(":")
+            append(port)
+        }
+
+        append(request.requestURI)
+
+        request.queryString
+            ?.takeIf { it.isNotBlank() }
+            ?.let {
+                append("?")
+                append(it)
+            }
+    }
+}
 }
