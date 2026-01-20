@@ -2,6 +2,7 @@ package no.novari.flyt.gateway.webinstance
 
 import no.novari.flyt.gateway.webinstance.exception.FileUploadException
 import no.novari.flyt.gateway.webinstance.model.File
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.retry.annotation.Backoff
@@ -11,7 +12,6 @@ import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestClientResponseException
-import org.slf4j.LoggerFactory
 import java.net.URI
 import java.util.UUID
 
