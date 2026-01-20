@@ -74,10 +74,9 @@ class RestClientConfiguration {
         }
         log.info("Using file-service URL: {}", fileServiceUrl)
         val interceptor = OAuth2ClientHttpRequestInterceptor(authorizedClientManager, "file-service")
-
         return RestClient
             .builder()
-            .baseUrl("$fileServiceUrl/api/intern-klient/filer")
+            .baseUrl(fileServiceUrl)
             .requestFactory { uri: URI, method: HttpMethod -> requestFactory.createRequest(uri, method) }
             .requestInterceptor(interceptor)
             .build()

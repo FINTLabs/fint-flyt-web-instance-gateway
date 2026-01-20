@@ -35,7 +35,7 @@ class FileClient(
             val response =
                 restClient
                     .post()
-                    .uri("/")
+                    .uri("/api/intern-klient/filer")
                     .body(file)
                     .retrieve()
                     .body(UUID::class.java)
