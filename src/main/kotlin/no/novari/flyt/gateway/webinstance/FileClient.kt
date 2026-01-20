@@ -3,6 +3,7 @@ package no.novari.flyt.gateway.webinstance
 import no.novari.flyt.gateway.webinstance.exception.FileUploadException
 import no.novari.flyt.gateway.webinstance.model.File
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Recover
 import org.springframework.retry.annotation.Retryable
@@ -10,12 +11,16 @@ import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestClientResponseException
+import org.slf4j.LoggerFactory
+import java.net.URI
 import java.util.UUID
 
 @Service
 class FileClient(
     @field:Qualifier("fileRestClient")
     private val restClient: RestClient,
+    @Value("\${novari.flyt.file-service-url}")
+    private val fileServiceUrl: String,
 ) {
     @Retryable(
         value = [
@@ -32,10 +37,13 @@ class FileClient(
     )
     fun postFile(file: File): UUID {
         try {
+            val uri = fileServiceUrl.trimEnd('/') + "/api/intern-klient/filer"
+            log.info("File upload URL base: {}", fileServiceUrl)
+            log.info("File upload URL: {}", uri)
             val response =
                 restClient
                     .post()
-                    .uri("/api/intern-klient/filer")
+                    .uri(URI.create(uri))
                     .body(file)
                     .retrieve()
                     .body(UUID::class.java)
@@ -51,6 +59,10 @@ class FileClient(
         } catch (ex: RestClientException) {
             throw ex
         }
+    }
+
+    private companion object {
+        private val log = LoggerFactory.getLogger(FileClient::class.java)
     }
 
     @Recover
