@@ -3,7 +3,6 @@ import org.springframework.boot.gradle.plugin.SpringBootPlugin
 
 object Versions {
     const val KOTLIN = "2.2.21"
-    const val FINT_MODEL = "3.21.10"
 }
 
 plugins {
@@ -47,7 +46,6 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-parameter-names")
     implementation("org.apache.httpcomponents.client5:httpclient5")
 
-    implementation("no.fint:fint-arkiv-resource-model-java:${Versions.FINT_MODEL}")
     api("no.novari:flyt-web-resource-server:2.0.0")
     api("no.novari:flyt-kafka:4.0.0")
 
