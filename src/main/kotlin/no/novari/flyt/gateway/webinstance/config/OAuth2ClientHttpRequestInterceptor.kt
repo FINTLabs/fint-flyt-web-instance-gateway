@@ -1,5 +1,6 @@
 package no.novari.flyt.gateway.webinstance.config
 
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpRequest
 import org.springframework.http.client.ClientHttpRequestExecution
 import org.springframework.http.client.ClientHttpRequestInterceptor
@@ -34,10 +35,22 @@ class OAuth2ClientHttpRequestInterceptor(
                 .build()
 
         val authorizedClient = authorizedClientManager.authorize(authorizeRequest)
-        authorizedClient?.accessToken?.let { accessToken ->
-            request.headers.add("Authorization", "Bearer ${accessToken.tokenValue}")
+        if (authorizedClient == null) {
+            log.warn(
+                "OAuth2 client '{}' not authorized; request will be sent without a bearer token",
+                clientRegistrationId,
+            )
+        } else {
+            authorizedClient.accessToken?.let { accessToken ->
+                request.headers.add("Authorization", "Bearer ${accessToken.tokenValue}")
+                log.debug("Added OAuth2 bearer token for client '{}'", clientRegistrationId)
+            }
         }
 
         return execution.execute(request, body)
+    }
+
+    private companion object {
+        private val log = LoggerFactory.getLogger(OAuth2ClientHttpRequestInterceptor::class.java)
     }
 }

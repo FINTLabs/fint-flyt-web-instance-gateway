@@ -4,9 +4,7 @@ import org.apache.hc.client5.http.config.ConnectionConfig
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder
 import org.apache.hc.core5.util.Timeout
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.http.HttpMethod
@@ -64,25 +62,14 @@ class RestClientConfiguration {
 
     @Bean
     fun fileRestClient(
-        @Value("\${novari.flyt.file-service-url}") fileServiceUrl: String,
         @Qualifier("fileAuthorizedClientManager") authorizedClientManager: OAuth2AuthorizedClientManager,
         @Qualifier("fileClientHttpRequestFactory") requestFactory: ClientHttpRequestFactory,
     ): RestClient {
-        if (fileServiceUrl.isBlank()) {
-            log.error("Missing required property: novari.flyt.file-service-url")
-            error("Missing required property: novari.flyt.file-service-url")
-        }
-        log.info("Using file-service URL: {}", fileServiceUrl)
         val interceptor = OAuth2ClientHttpRequestInterceptor(authorizedClientManager, "file-service")
         return RestClient
             .builder()
-            .baseUrl(fileServiceUrl)
             .requestFactory { uri: URI, method: HttpMethod -> requestFactory.createRequest(uri, method) }
             .requestInterceptor(interceptor)
             .build()
-    }
-
-    private companion object {
-        private val log = LoggerFactory.getLogger(RestClientConfiguration::class.java)
     }
 }
