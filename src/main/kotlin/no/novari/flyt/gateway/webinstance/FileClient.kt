@@ -17,7 +17,7 @@ import java.util.UUID
 
 @Service
 class FileClient(
-    @field:Qualifier("fileRestClient")
+    @param:Qualifier("fileRestClient")
     private val restClient: RestClient,
     @Value("\${novari.flyt.file-service-url}")
     private val fileServiceUrl: String,
