@@ -19,7 +19,7 @@ import java.util.UUID
 class FileClient(
     @param:Qualifier("fileRestClient")
     private val restClient: RestClient,
-    @Value("\${novari.flyt.file-service-url}")
+    @param:Value("\${novari.flyt.file-service-url}")
     private val fileServiceUrl: String,
 ) {
     @Retryable(
@@ -38,8 +38,8 @@ class FileClient(
     fun postFile(file: File): UUID {
         try {
             val uri = fileServiceUrl.trimEnd('/') + "/api/intern-klient/filer"
-            log.info("File upload URL base: {}", fileServiceUrl)
-            log.info("File upload URL: {}", uri)
+            log.debug("File upload URL base: {}", fileServiceUrl)
+            log.debug("File upload URL: {}", uri)
             val response =
                 restClient
                     .post()
