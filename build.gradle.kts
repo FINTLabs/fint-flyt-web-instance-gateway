@@ -1,24 +1,28 @@
-import org.gradle.authentication.http.BasicAuthentication
+import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import org.springframework.boot.gradle.plugin.SpringBootPlugin
 
 object Versions {
-    const val KOTLIN = "2.2.21"
+    const val KOTLIN = "2.3.10"
 }
 
 plugins {
-    id("org.springframework.boot") version "3.5.9" apply false
+    id("org.springframework.boot") version "3.5.10" apply false
     id("io.spring.dependency-management") version "1.1.7"
     id("maven-publish")
     id("com.github.ben-manes.versions") version "0.53.0"
-    id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
-    kotlin("jvm") version "2.2.21"
-    kotlin("plugin.spring") version "2.2.21"
+    id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
+    kotlin("jvm") version "2.3.10"
+    kotlin("plugin.spring") version "2.3.10"
 }
 
 group = "no.novari"
 version = findProperty("version") ?: "1.0-SNAPSHOT"
 
 extra["kotlin.version"] = Versions.KOTLIN
+
+ktlint {
+    version.set("1.8.0")
+}
 
 private val fintLabsRepo = uri("https://repo.fintlabs.no/releases")
 
@@ -46,14 +50,14 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-parameter-names")
     implementation("org.apache.httpcomponents.client5:httpclient5")
 
-    api("no.novari:flyt-web-resource-server:2.0.0")
-    api("no.novari:flyt-kafka:4.0.0")
+    api("no.novari:flyt-web-resource-server:2.1.0-rc-1")
+    api("no.novari:flyt-kafka:5.1.0-rc-1")
 
     testImplementation(kotlin("test"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
-    testImplementation("com.ninja-squad:springmockk:4.0.2")
-    testImplementation("org.mockito.kotlin:mockito-kotlin:6.1.0")
+    testImplementation("com.ninja-squad:springmockk:5.0.1")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:6.2.3")
 }
 
 tasks.withType<Test>().configureEach {
@@ -61,7 +65,7 @@ tasks.withType<Test>().configureEach {
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(25)
 }
 
 tasks.named<Jar>("jar") {
@@ -93,5 +97,18 @@ publishing {
         create<MavenPublication>("maven") {
             from(components["java"])
         }
+    }
+}
+
+fun isNonStable(version: String): Boolean {
+    val stableKeyword = listOf("RELEASE", "FINAL", "GA").any { version.uppercase().contains(it) }
+    val regex = "^[0-9,.v-]+(-r)?$".toRegex()
+    val isStable = stableKeyword || regex.matches(version)
+    return !isStable
+}
+
+tasks.named<DependencyUpdatesTask>("dependencyUpdates") {
+    rejectVersionIf {
+        isNonStable(candidate.version)
     }
 }
