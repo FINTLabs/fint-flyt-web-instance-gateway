@@ -54,7 +54,7 @@ class FileClient(
 
             return response
         } catch (ex: RestClientResponseException) {
-            val body = ex.responseBodyAsString?.ifBlank { "<empty>" } ?: "<empty>"
+            val body = ex.responseBodyAsString.ifBlank { "<empty>" } ?: "<empty>"
             val status = ex.statusCode.value()
             val statusText = ex.statusText.ifBlank { "Unknown status" }
             throw FileUploadException(file, "HTTP $status $statusText: $body", ex)
