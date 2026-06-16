@@ -92,6 +92,7 @@ Required:
 Optional:
 - `novari.flyt.web-instance-gateway.check-integration-exists` (default `true`)
 - `novari.flyt.web-instance-gateway.max-request-size` (default `100MB`)
+- `novari.flyt.web-instance-gateway.jackson.max-string-length` (default: same as `max-request-size`; override with values like `120MB` or bytes)
 - `novari.flyt.web-instance-gateway.kafka.topic.instance-receival-error.retention-time` (default `PT96H`)
 - `novari.flyt.web-instance-gateway.kafka.topic.instance-receival-error.cleanup-frequency` (default `NORMAL`)
 - `novari.flyt.web-instance-gateway.kafka.topic.instance-receival-error.partitions` (default `1`)
