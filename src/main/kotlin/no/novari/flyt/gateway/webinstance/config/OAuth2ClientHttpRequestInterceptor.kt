@@ -21,6 +21,13 @@ class OAuth2ClientHttpRequestInterceptor(
         body: ByteArray,
         execution: ClientHttpRequestExecution,
     ): ClientHttpResponse {
+        log.debug(
+            "Authorizing OAuth2 client request, clientRegistrationId={}, method={}, uri={}",
+            clientRegistrationId,
+            request.method,
+            request.uri,
+        )
+
         val principal =
             AnonymousAuthenticationToken(
                 "anonymous",
@@ -43,11 +50,36 @@ class OAuth2ClientHttpRequestInterceptor(
         } else {
             authorizedClient.accessToken?.let { accessToken ->
                 request.headers.add("Authorization", "Bearer ${accessToken.tokenValue}")
-                log.debug("Added OAuth2 bearer token for client '{}'", clientRegistrationId)
+                log.debug(
+                    "Added OAuth2 bearer token, clientRegistrationId={}, expiresAt={}",
+                    clientRegistrationId,
+                    accessToken.expiresAt,
+                )
             }
         }
 
-        return execution.execute(request, body)
+        return try {
+            val response = execution.execute(request, body)
+            log.debug(
+                "OAuth2 client request completed, clientRegistrationId={}, method={}, uri={}, statusCode={}",
+                clientRegistrationId,
+                request.method,
+                request.uri,
+                response.statusCode,
+            )
+            response
+        } catch (ex: IOException) {
+            log.debug(
+                "OAuth2 client request failed before receiving HTTP response, clientRegistrationId={}, method={}, uri={}, exceptionType={}, message={}",
+                clientRegistrationId,
+                request.method,
+                request.uri,
+                ex::class.qualifiedName,
+                ex.message,
+                ex,
+            )
+            throw ex
+        }
     }
 
     private companion object {

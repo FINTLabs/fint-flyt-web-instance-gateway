@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Recover
 import org.springframework.retry.annotation.Retryable
+import org.springframework.retry.support.RetrySynchronizationManager
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestClientException
@@ -27,7 +28,7 @@ class FileClient(
             RestClientException::class,
             FileUploadException::class,
         ],
-        maxAttempts = 5,
+        maxAttempts = MAX_ATTEMPTS,
         backoff =
             Backoff(
                 delay = 1_000,
@@ -36,10 +37,17 @@ class FileClient(
             ),
     )
     fun postFile(file: File): UUID {
+        val uri = fileServiceUrl.trimEnd('/') + "/api/intern-klient/filer"
+        val attempt = currentRetryAttempt()
+
         try {
-            val uri = fileServiceUrl.trimEnd('/') + "/api/intern-klient/filer"
-            log.debug("File upload URL base: {}", fileServiceUrl)
-            log.debug("File upload URL: {}", uri)
+            log.debug(
+                "Posting file to file service, attempt={}, uri={}, file={}",
+                attempt,
+                uri,
+                file.toDebugLogString(),
+            )
+
             val response =
                 restClient
                     .post()
@@ -49,22 +57,50 @@ class FileClient(
                     .body(UUID::class.java)
 
             if (response == null) {
+                log.debug(
+                    "File upload returned empty response body, attempt={}, uri={}, file={}",
+                    attempt,
+                    uri,
+                    file.toDebugLogString(),
+                )
                 throw FileUploadException(file, "Empty response body")
             }
 
+            log.debug(
+                "File upload succeeded, attempt={}, uri={}, fileId={}, file={}",
+                attempt,
+                uri,
+                response,
+                file.toDebugLogString(),
+            )
             return response
         } catch (ex: RestClientResponseException) {
-            val body = ex.responseBodyAsString.ifBlank { "<empty>" } ?: "<empty>"
+            val body = ex.responseBodyAsString.ifBlank { "<empty>" }
             val status = ex.statusCode.value()
             val statusText = ex.statusText.ifBlank { "Unknown status" }
+            log.debug(
+                "File upload failed with HTTP response, attempt={}, uri={}, status={}, statusText={}, responseBody={}, file={}",
+                attempt,
+                uri,
+                status,
+                statusText,
+                body.toLogValue(),
+                file.toDebugLogString(),
+                ex,
+            )
             throw FileUploadException(file, "HTTP $status $statusText: $body", ex)
         } catch (ex: RestClientException) {
+            log.debug(
+                "File upload failed before receiving HTTP response, attempt={}, uri={}, exceptionType={}, message={}, file={}",
+                attempt,
+                uri,
+                ex::class.qualifiedName,
+                ex.message,
+                file.toDebugLogString(),
+                ex,
+            )
             throw ex
         }
-    }
-
-    private companion object {
-        private val log = LoggerFactory.getLogger(FileClient::class.java)
     }
 
     @Recover
@@ -79,10 +115,54 @@ class FileClient(
                 else -> ex.message
             } ?: "Unknown error"
 
+        log.debug(
+            "File upload retries exhausted, attempts={}, failureType={}, message={}, file={}",
+            MAX_ATTEMPTS,
+            ex::class.qualifiedName,
+            message,
+            file.toDebugLogString(),
+            ex,
+        )
+
         throw FileUploadException(
             file = file,
             postResponse = message,
             cause = ex,
         )
+    }
+
+    private fun currentRetryAttempt(): Int = (RetrySynchronizationManager.getContext()?.retryCount ?: 0) + 1
+
+    private fun File.toDebugLogString(): String =
+        "base64ContentLength=${base64Contents.length}, " +
+            "estimatedContentLengthBytes=${estimatedContentLengthBytes()}"
+
+    private fun File.estimatedContentLengthBytes(): Long {
+        val contentLength = base64Contents.length
+        if (contentLength == 0) {
+            return 0
+        }
+
+        val padding =
+            when {
+                base64Contents.endsWith("==") -> 2
+                base64Contents.endsWith("=") -> 1
+                else -> 0
+            }
+
+        return (contentLength * 3L / 4) - padding
+    }
+
+    private fun String.toLogValue(): String =
+        if (length <= MAX_RESPONSE_BODY_LOG_LENGTH) {
+            this
+        } else {
+            "${take(MAX_RESPONSE_BODY_LOG_LENGTH)}<truncated ${length - MAX_RESPONSE_BODY_LOG_LENGTH} chars>"
+        }
+
+    private companion object {
+        private const val MAX_ATTEMPTS = 5
+        private const val MAX_RESPONSE_BODY_LOG_LENGTH = 4_000
+        private val log = LoggerFactory.getLogger(FileClient::class.java)
     }
 }
