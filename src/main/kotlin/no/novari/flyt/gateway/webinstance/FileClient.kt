@@ -134,7 +134,7 @@ class FileClient(
     private fun currentRetryAttempt(): Int = (RetrySynchronizationManager.getContext()?.retryCount ?: 0) + 1
 
     private fun File.toDebugLogString(): String =
-        "$this, base64ContentLength=${base64Contents.length}, " +
+        "base64ContentLength=${base64Contents.length}, " +
             "estimatedContentLengthBytes=${estimatedContentLengthBytes()}"
 
     private fun File.estimatedContentLengthBytes(): Long {
