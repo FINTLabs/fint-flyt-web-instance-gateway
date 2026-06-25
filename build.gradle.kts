@@ -2,17 +2,17 @@ import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import org.springframework.boot.gradle.plugin.SpringBootPlugin
 
 object Versions {
-    const val KOTLIN = "2.3.10"
+    const val KOTLIN = "2.4.0"
 }
 
 plugins {
-    id("org.springframework.boot") version "3.5.10" apply false
+    id("org.springframework.boot") version "3.5.15" apply false
     id("io.spring.dependency-management") version "1.1.7"
     id("maven-publish")
-    id("com.github.ben-manes.versions") version "0.53.0"
+    id("com.github.ben-manes.versions") version "0.54.0"
     id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
-    kotlin("jvm") version "2.3.10"
-    kotlin("plugin.spring") version "2.3.10"
+    kotlin("jvm") version "2.4.0"
+    kotlin("plugin.spring") version "2.4.0"
 }
 
 group = "no.novari"
@@ -50,8 +50,8 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-parameter-names")
     implementation("org.apache.httpcomponents.client5:httpclient5")
 
-    api("no.novari:flyt-web-resource-server:3.0.1")
-    api("no.novari:flyt-kafka:6.0.0")
+    api("no.novari:flyt-web-resource-server:3.1.0")
+    api("no.novari:flyt-kafka:7.0.0")
 
     testImplementation(kotlin("test"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
