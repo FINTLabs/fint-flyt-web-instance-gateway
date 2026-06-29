@@ -1,3 +1,4 @@
 no.novari.flyt.gateway.webinstance.config.JacksonConfiguration
 no.novari.flyt.gateway.webinstance.config.KafkaConfiguration
+no.novari.flyt.gateway.webinstance.config.MultipartConfiguration
 no.novari.flyt.gateway.webinstance.config.RestClientConfiguration

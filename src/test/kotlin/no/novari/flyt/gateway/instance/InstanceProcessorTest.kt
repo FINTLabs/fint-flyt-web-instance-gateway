@@ -93,7 +93,7 @@ class InstanceProcessorTest {
     @Test
     fun shouldProcessInstanceAndPostFileSuccessfully() {
         val mockFile = mock<File>()
-        whenever(fileClient.postFile(any())).thenReturn(UUID.randomUUID())
+        whenever(fileClient.postFile(any<File>())).thenReturn(UUID.randomUUID())
 
         whenever(instanceMapper.map(any(), any(), any())).thenAnswer { invocation ->
             val postFile = invocation.getArgument<(File) -> UUID>(2)
@@ -105,14 +105,14 @@ class InstanceProcessorTest {
         val result = instanceProcessor.processInstance(authentication, incoming)
 
         assertEquals(ResponseEntity.accepted().build(), result)
-        verify(fileClient, times(1)).postFile(any())
+        verify(fileClient, times(1)).postFile(any<File>())
         verify(receivedInstanceEventProducerService, times(1)).publish(any(), any())
     }
 
     @Test
     fun shouldProcessInstanceAndPostMultipleFilesSuccessfully() {
         val mockFile = mock<File>()
-        whenever(fileClient.postFile(any())).thenReturn(UUID.randomUUID())
+        whenever(fileClient.postFile(any<File>())).thenReturn(UUID.randomUUID())
 
         whenever(instanceMapper.map(any(), any(), any())).thenAnswer { invocation ->
             val postFile = invocation.getArgument<(File) -> UUID>(2)
@@ -126,7 +126,7 @@ class InstanceProcessorTest {
         val result = instanceProcessor.processInstance(authentication, incoming)
 
         assertEquals(ResponseEntity.accepted().build(), result)
-        verify(fileClient, times(3)).postFile(any())
+        verify(fileClient, times(3)).postFile(any<File>())
         verify(receivedInstanceEventProducerService, times(1)).publish(any(), eq(instanceObject))
     }
 
@@ -149,7 +149,7 @@ class InstanceProcessorTest {
         val mockFile = mock<File>()
         val fileUploadException = FileUploadException(mockFile, "File upload failed")
 
-        whenever(fileClient.postFile(any())).thenReturn(UUID.randomUUID()).thenThrow(fileUploadException)
+        whenever(fileClient.postFile(any<File>())).thenReturn(UUID.randomUUID()).thenThrow(fileUploadException)
 
         whenever(instanceMapper.map(any(), any(), any())).thenAnswer { invocation ->
             val postFile = invocation.getArgument<(File) -> UUID>(2)
