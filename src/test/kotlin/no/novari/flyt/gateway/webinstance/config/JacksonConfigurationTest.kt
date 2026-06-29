@@ -3,6 +3,7 @@ package no.novari.flyt.gateway.webinstance.config
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.getBean
 import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
@@ -20,7 +21,7 @@ class JacksonConfigurationTest {
     @Test
     fun `sets default Jackson max string length for large base64 payloads`() {
         contextRunner.run { context ->
-            val objectMapper = context.getBean(ObjectMapper::class.java)
+            val objectMapper = context.getBean<ObjectMapper>()
 
             assertThat(objectMapper.factory.streamReadConstraints().maxStringLength)
                 .isEqualTo(104_857_600)
@@ -32,7 +33,7 @@ class JacksonConfigurationTest {
         contextRunner
             .withPropertyValues("novari.flyt.web-instance-gateway.max-request-size=150MB")
             .run { context ->
-                val objectMapper = context.getBean(ObjectMapper::class.java)
+                val objectMapper = context.getBean<ObjectMapper>()
 
                 assertThat(objectMapper.factory.streamReadConstraints().maxStringLength)
                     .isEqualTo(157_286_400)
@@ -46,7 +47,7 @@ class JacksonConfigurationTest {
                 "novari.flyt.web-instance-gateway.max-request-size=150MB",
                 "novari.flyt.web-instance-gateway.jackson.max-string-length=120MB",
             ).run { context ->
-                val objectMapper = context.getBean(ObjectMapper::class.java)
+                val objectMapper = context.getBean<ObjectMapper>()
 
                 assertThat(objectMapper.factory.streamReadConstraints().maxStringLength)
                     .isEqualTo(125_829_120)

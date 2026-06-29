@@ -45,4 +45,34 @@ class InstanceProcessorFactoryService(
             instanceMapper = instanceMapper,
         )
     }
+
+    fun <T : Any> createMultipartInstanceProcessor(
+        sourceApplicationIntegrationId: String,
+        sourceApplicationInstanceIdFunction: (T) -> String,
+        multipartInstanceMapper: MultipartInstanceMapper<T>,
+    ): MultipartInstanceProcessor<T> {
+        return createMultipartInstanceProcessor(
+            { _ -> sourceApplicationIntegrationId },
+            sourceApplicationInstanceIdFunction,
+            multipartInstanceMapper,
+        )
+    }
+
+    fun <T : Any> createMultipartInstanceProcessor(
+        sourceApplicationIntegrationIdFunction: (T) -> String,
+        sourceApplicationInstanceIdFunction: (T) -> String,
+        multipartInstanceMapper: MultipartInstanceMapper<T>,
+    ): MultipartInstanceProcessor<T> {
+        return MultipartInstanceProcessor(
+            integrationRequestProducerService = integrationRequestProducerService,
+            instanceValidationService = instanceValidationService,
+            receivedInstanceEventProducerService = receivedInstanceEventProducerService,
+            instanceReceivalErrorEventProducerService = instanceReceivalErrorEventProducerService,
+            sourceApplicationAuthorizationService = sourceApplicationAuthorizationService,
+            fileClient = fileClient,
+            sourceApplicationIntegrationIdFunction = sourceApplicationIntegrationIdFunction,
+            sourceApplicationInstanceIdFunction = sourceApplicationInstanceIdFunction,
+            multipartInstanceMapper = multipartInstanceMapper,
+        )
+    }
 }

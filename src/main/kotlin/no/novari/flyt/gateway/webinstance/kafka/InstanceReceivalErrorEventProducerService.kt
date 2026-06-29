@@ -5,6 +5,7 @@ import no.novari.flyt.gateway.webinstance.config.properties.InstanceProcessingEv
 import no.novari.flyt.gateway.webinstance.exception.AbstractInstanceRejectedException
 import no.novari.flyt.gateway.webinstance.exception.FileUploadException
 import no.novari.flyt.gateway.webinstance.exception.IntegrationDeactivatedException
+import no.novari.flyt.gateway.webinstance.exception.MultipartFileUploadException
 import no.novari.flyt.gateway.webinstance.exception.NoIntegrationException
 import no.novari.flyt.gateway.webinstance.validation.InstanceValidationErrorMappingService
 import no.novari.flyt.gateway.webinstance.validation.InstanceValidationException
@@ -106,6 +107,22 @@ class InstanceReceivalErrorEventProducerService(
     fun publishInstanceFileUploadErrorEvent(
         instanceFlowHeaders: InstanceFlowHeaders,
         e: FileUploadException,
+    ) {
+        send(
+            instanceFlowHeaders,
+            singleError(
+                ErrorCode.FILE_UPLOAD_ERROR,
+                mapOf(
+                    "name" to e.file.name,
+                    "mediatype" to e.file.type.toString(),
+                ),
+            ),
+        )
+    }
+
+    fun publishMultipartFileUploadErrorEvent(
+        instanceFlowHeaders: InstanceFlowHeaders,
+        e: MultipartFileUploadException,
     ) {
         send(
             instanceFlowHeaders,
