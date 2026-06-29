@@ -55,6 +55,28 @@ class MultipartFilePartsTest {
     }
 
     @Test
+    fun shouldIgnoreFileNameWhenMatchingFilePart() {
+        val multipartFile =
+            MockMultipartFile(
+                "document",
+                "client-original.pdf",
+                MediaType.APPLICATION_PDF_VALUE,
+                "test".toByteArray(),
+            )
+
+        val resolved =
+            MultipartFileParts(listOf(multipartFile))
+                .resolve(
+                    MultipartFileReference(
+                        partName = "document",
+                        fileName = "renamed-application.pdf",
+                    ),
+                )
+
+        assertThat(resolved).isSameAs(multipartFile)
+    }
+
+    @Test
     fun shouldRejectAmbiguousFilePartReference() {
         val firstFile =
             MockMultipartFile(

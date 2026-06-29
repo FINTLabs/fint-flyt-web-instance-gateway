@@ -21,14 +21,21 @@ class MultipartFileParts(
             )
         }
 
-        val matchingFilename = reference.originalFilename ?: reference.fileName
+        if (matchingPartName.size == 1) {
+            return matchingPartName.single()
+        }
+
+        val matchingOriginalFilename = reference.originalFilename
+        if (matchingOriginalFilename.isNullOrBlank()) {
+            throw MultipartFileReferenceException(
+                "Multiple multipart file parts found for provided file reference. " +
+                    "Set originalFilename in MultipartFileReference to identify the file part.",
+            )
+        }
+
         val matchingFiles =
-            if (matchingFilename.isNullOrBlank()) {
-                matchingPartName
-            } else {
-                matchingPartName.filter { multipartFile ->
-                    multipartFile.originalFilename == matchingFilename
-                }
+            matchingPartName.filter { multipartFile ->
+                multipartFile.originalFilename == matchingOriginalFilename
             }
 
         return when (matchingFiles.size) {

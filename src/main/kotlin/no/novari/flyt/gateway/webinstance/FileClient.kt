@@ -261,11 +261,6 @@ class FileClient(
         val body = LinkedMultiValueMap<String, Any>()
         body.add("metadata", HttpEntity(toMetadata(), metadataHeaders()))
         body.add("file", HttpEntity(toResource(), fileHeaders()))
-        body.add("name", name)
-        body.add("sourceApplicationId", sourceApplicationId.toString())
-        body.add("sourceApplicationInstanceId", sourceApplicationInstanceId)
-        body.add("type", type.toString())
-        body.add("encoding", encoding)
         return body
     }
 
