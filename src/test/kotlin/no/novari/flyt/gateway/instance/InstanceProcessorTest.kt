@@ -4,7 +4,7 @@ import no.novari.flyt.gateway.webinstance.FileClient
 import no.novari.flyt.gateway.webinstance.InstanceMapper
 import no.novari.flyt.gateway.webinstance.InstanceProcessor
 import no.novari.flyt.gateway.webinstance.exception.FileUploadException
-import no.novari.flyt.gateway.webinstance.kafka.InstanceReceivalErrorEventProducerService
+import no.novari.flyt.gateway.webinstance.kafka.InstanceErrorEventProducerService
 import no.novari.flyt.gateway.webinstance.kafka.IntegrationRequestProducerService
 import no.novari.flyt.gateway.webinstance.kafka.ReceivedInstanceEventProducerService
 import no.novari.flyt.gateway.webinstance.model.File
@@ -43,7 +43,7 @@ class InstanceProcessorTest {
     private lateinit var receivedInstanceEventProducerService: ReceivedInstanceEventProducerService
 
     @Mock
-    private lateinit var instanceReceivalErrorEventProducerService: InstanceReceivalErrorEventProducerService
+    private lateinit var instanceErrorEventProducerService: InstanceErrorEventProducerService
 
     @Mock
     private lateinit var sourceApplicationAuthorizationService: SourceApplicationAuthorizationService

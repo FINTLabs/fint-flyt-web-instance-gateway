@@ -1,6 +1,6 @@
 package no.novari.flyt.gateway.webinstance
 
-import no.novari.flyt.gateway.webinstance.kafka.InstanceReceivalErrorEventProducerService
+import no.novari.flyt.gateway.webinstance.kafka.InstanceErrorEventProducerService
 import no.novari.flyt.gateway.webinstance.kafka.IntegrationRequestProducerService
 import no.novari.flyt.gateway.webinstance.kafka.ReceivedInstanceEventProducerService
 import no.novari.flyt.gateway.webinstance.validation.InstanceValidationService
@@ -12,7 +12,7 @@ class InstanceProcessorFactoryService(
     private val integrationRequestProducerService: IntegrationRequestProducerService,
     private val instanceValidationService: InstanceValidationService,
     private val receivedInstanceEventProducerService: ReceivedInstanceEventProducerService,
-    private val instanceReceivalErrorEventProducerService: InstanceReceivalErrorEventProducerService,
+    private val instanceErrorEventProducerService: InstanceErrorEventProducerService,
     private val sourceApplicationAuthorizationService: SourceApplicationAuthorizationService,
     private val fileClient: FileClient,
 ) {
@@ -37,7 +37,7 @@ class InstanceProcessorFactoryService(
             integrationRequestProducerService = integrationRequestProducerService,
             instanceValidationService = instanceValidationService,
             receivedInstanceEventProducerService = receivedInstanceEventProducerService,
-            instanceReceivalErrorEventProducerService = instanceReceivalErrorEventProducerService,
+            instanceErrorEventProducerService = instanceErrorEventProducerService,
             sourceApplicationAuthorizationService = sourceApplicationAuthorizationService,
             fileClient = fileClient,
             sourceApplicationIntegrationIdFunction = sourceApplicationIntegrationIdFunction,
@@ -67,7 +67,7 @@ class InstanceProcessorFactoryService(
             integrationRequestProducerService = integrationRequestProducerService,
             instanceValidationService = instanceValidationService,
             receivedInstanceEventProducerService = receivedInstanceEventProducerService,
-            instanceReceivalErrorEventProducerService = instanceReceivalErrorEventProducerService,
+            instanceErrorEventProducerService = instanceErrorEventProducerService,
             sourceApplicationAuthorizationService = sourceApplicationAuthorizationService,
             fileClient = fileClient,
             sourceApplicationIntegrationIdFunction = sourceApplicationIntegrationIdFunction,

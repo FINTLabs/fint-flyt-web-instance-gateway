@@ -6,11 +6,11 @@ object Versions {
 }
 
 plugins {
-    id("org.springframework.boot") version "3.5.15" apply false
+    id("org.springframework.boot") version "3.5.16" apply false
     id("io.spring.dependency-management") version "1.1.7"
     id("maven-publish")
     id("com.github.ben-manes.versions") version "0.54.0"
-    id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
+    id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
     kotlin("jvm") version "2.4.0"
     kotlin("plugin.spring") version "2.4.0"
 }
@@ -51,7 +51,7 @@ dependencies {
     implementation("org.apache.httpcomponents.client5:httpclient5")
 
     api("no.novari:flyt-web-resource-server:3.1.0")
-    api("no.novari:flyt-kafka:7.0.0")
+    api("no.novari:flyt-kafka:7.1.0")
 
     testImplementation(kotlin("test"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")

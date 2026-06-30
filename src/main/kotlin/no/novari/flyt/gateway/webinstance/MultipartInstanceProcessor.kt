@@ -4,7 +4,7 @@ import no.novari.flyt.gateway.webinstance.exception.AbstractInstanceRejectedExce
 import no.novari.flyt.gateway.webinstance.exception.IntegrationDeactivatedException
 import no.novari.flyt.gateway.webinstance.exception.MultipartFileUploadException
 import no.novari.flyt.gateway.webinstance.exception.NoIntegrationException
-import no.novari.flyt.gateway.webinstance.kafka.InstanceReceivalErrorEventProducerService
+import no.novari.flyt.gateway.webinstance.kafka.InstanceErrorEventProducerService
 import no.novari.flyt.gateway.webinstance.kafka.IntegrationRequestProducerService
 import no.novari.flyt.gateway.webinstance.kafka.ReceivedInstanceEventProducerService
 import no.novari.flyt.gateway.webinstance.model.Integration
@@ -30,7 +30,7 @@ class MultipartInstanceProcessor<T : Any>(
     private val integrationRequestProducerService: IntegrationRequestProducerService,
     private val instanceValidationService: InstanceValidationService,
     private val receivedInstanceEventProducerService: ReceivedInstanceEventProducerService,
-    private val instanceReceivalErrorEventProducerService: InstanceReceivalErrorEventProducerService,
+    private val instanceErrorEventProducerService: InstanceErrorEventProducerService,
     private val sourceApplicationAuthorizationService: SourceApplicationAuthorizationService,
     private val fileClient: FileClient,
     private val sourceApplicationIntegrationIdFunction: (T) -> String,
@@ -110,7 +110,7 @@ class MultipartInstanceProcessor<T : Any>(
                 }
             }
         } catch (e: InstanceValidationException) {
-            instanceReceivalErrorEventProducerService.publishInstanceValidationErrorEvent(headersBuilder.build(), e)
+            instanceErrorEventProducerService.publishInstanceValidationErrorEvent(headersBuilder.build(), e)
             throw ResponseStatusException(
                 HttpStatus.UNPROCESSABLE_ENTITY,
                 buildString {
@@ -119,13 +119,13 @@ class MultipartInstanceProcessor<T : Any>(
                 },
             )
         } catch (e: NoIntegrationException) {
-            instanceReceivalErrorEventProducerService.publishNoIntegrationFoundErrorEvent(headersBuilder.build(), e)
+            instanceErrorEventProducerService.publishNoIntegrationFoundErrorEvent(headersBuilder.build(), e)
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.message)
         } catch (e: IntegrationDeactivatedException) {
-            instanceReceivalErrorEventProducerService.publishIntegrationDeactivatedErrorEvent(headersBuilder.build(), e)
+            instanceErrorEventProducerService.publishIntegrationDeactivatedErrorEvent(headersBuilder.build(), e)
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.message)
         } catch (e: RuntimeException) {
-            instanceReceivalErrorEventProducerService.publishGeneralSystemErrorEvent(headersBuilder.build())
+            instanceErrorEventProducerService.publishGeneralSystemErrorEvent(headersBuilder.build())
             throw e
         }
 
@@ -151,15 +151,15 @@ class MultipartInstanceProcessor<T : Any>(
             ResponseEntity.accepted().build()
         } catch (e: AbstractInstanceRejectedException) {
             log.error("Instance receival error", e)
-            instanceReceivalErrorEventProducerService.publishInstanceRejectedErrorEvent(headersBuilder.build(), e)
+            instanceErrorEventProducerService.publishInstanceRejectedErrorEvent(headersBuilder.build(), e)
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.message, e)
         } catch (e: MultipartFileUploadException) {
             log.error("File upload error", e)
-            instanceReceivalErrorEventProducerService.publishMultipartFileUploadErrorEvent(headersBuilder.build(), e)
+            instanceErrorEventProducerService.publishMultipartFileUploadErrorEvent(headersBuilder.build(), e)
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.message, e)
         } catch (e: Exception) {
             log.error("General system error", e)
-            instanceReceivalErrorEventProducerService.publishGeneralSystemErrorEvent(headersBuilder.build())
+            instanceErrorEventProducerService.publishGeneralSystemErrorEvent(headersBuilder.build())
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "General system error", e)
         }
     }
