@@ -3,7 +3,7 @@ package no.novari.flyt.gateway.instance
 import no.novari.flyt.gateway.webinstance.FileClient
 import no.novari.flyt.gateway.webinstance.MultipartInstanceMapper
 import no.novari.flyt.gateway.webinstance.MultipartInstanceProcessor
-import no.novari.flyt.gateway.webinstance.kafka.InstanceReceivalErrorEventProducerService
+import no.novari.flyt.gateway.webinstance.kafka.InstanceErrorEventProducerService
 import no.novari.flyt.gateway.webinstance.kafka.IntegrationRequestProducerService
 import no.novari.flyt.gateway.webinstance.kafka.ReceivedInstanceEventProducerService
 import no.novari.flyt.gateway.webinstance.model.Integration
@@ -45,7 +45,7 @@ class MultipartInstanceProcessorTest {
     private lateinit var receivedInstanceEventProducerService: ReceivedInstanceEventProducerService
 
     @Mock
-    private lateinit var instanceReceivalErrorEventProducerService: InstanceReceivalErrorEventProducerService
+    private lateinit var instanceErrorEventProducerService: InstanceErrorEventProducerService
 
     @Mock
     private lateinit var sourceApplicationAuthorizationService: SourceApplicationAuthorizationService
@@ -95,7 +95,7 @@ class MultipartInstanceProcessorTest {
                 integrationRequestProducerService = integrationRequestProducerService,
                 instanceValidationService = instanceValidationService,
                 receivedInstanceEventProducerService = receivedInstanceEventProducerService,
-                instanceReceivalErrorEventProducerService = instanceReceivalErrorEventProducerService,
+                instanceErrorEventProducerService = instanceErrorEventProducerService,
                 sourceApplicationAuthorizationService = sourceApplicationAuthorizationService,
                 fileClient = fileClient,
                 sourceApplicationIntegrationIdFunction = sourceApplicationIntegrationIdFunction,
@@ -202,7 +202,7 @@ class MultipartInstanceProcessorTest {
         assertThat(exception.statusCode.value()).isEqualTo(422)
         assertThat(exception).hasMessageContaining("No multipart file part found")
         assertThat(exception).hasMessageNotContaining("missing-file")
-        verify(instanceReceivalErrorEventProducerService, times(1)).publishInstanceRejectedErrorEvent(any(), any())
+        verify(instanceErrorEventProducerService, times(1)).publishInstanceRejectedErrorEvent(any(), any())
         verify(fileClient, never()).postFile(any<MultipartFileUpload>())
         verify(receivedInstanceEventProducerService, never()).publish(any(), any())
     }

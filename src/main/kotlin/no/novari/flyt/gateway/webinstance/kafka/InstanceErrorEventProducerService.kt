@@ -14,6 +14,8 @@ import no.novari.flyt.kafka.instanceflow.producing.InstanceFlowProducerRecord
 import no.novari.flyt.kafka.instanceflow.producing.InstanceFlowTemplateFactory
 import no.novari.flyt.kafka.model.Error
 import no.novari.flyt.kafka.model.ErrorCollection
+import no.novari.flyt.kafka.model.InstanceErrorEvent
+import no.novari.flyt.kafka.model.InstanceErrorOrigin
 import no.novari.kafka.topic.ErrorEventTopicService
 import no.novari.kafka.topic.configuration.EventTopicConfiguration
 import no.novari.kafka.topic.name.ErrorEventTopicNameParameters
@@ -21,17 +23,17 @@ import no.novari.kafka.topic.name.TopicNamePrefixParameters
 import org.springframework.stereotype.Service
 
 @Service
-class InstanceReceivalErrorEventProducerService(
+class InstanceErrorEventProducerService(
     errorEventTopicService: ErrorEventTopicService,
     instanceFlowTemplateFactory: InstanceFlowTemplateFactory,
     private val instanceValidationErrorMappingService: InstanceValidationErrorMappingService,
     instanceProcessingEventsConfigurationProperties: InstanceProcessingEventsConfigurationProperties,
 ) {
     companion object {
-        private const val ERROR_EVENT_NAME = "instance-receival-error"
+        private const val ERROR_EVENT_NAME = "instance-error"
     }
 
-    private val instanceReceivalErrorTopicNameParameters =
+    private val instanceErrorTopicNameParameters =
         ErrorEventTopicNameParameters
             .builder()
             .topicNamePrefixParameters(
@@ -43,12 +45,11 @@ class InstanceReceivalErrorEventProducerService(
             ).errorEventName(ERROR_EVENT_NAME)
             .build()
 
-    private val template = instanceFlowTemplateFactory.createTemplate(ErrorCollection::class.java)
+    private val template = instanceFlowTemplateFactory.createTemplate(InstanceErrorEvent::class.java)
 
     init {
-        // Must match setup in `fint-flyt-instance-gateway`
         errorEventTopicService.createOrModifyTopic(
-            instanceReceivalErrorTopicNameParameters,
+            instanceErrorTopicNameParameters,
             EventTopicConfiguration
                 .stepBuilder()
                 .partitions(instanceProcessingEventsConfigurationProperties.partitions)
@@ -64,10 +65,10 @@ class InstanceReceivalErrorEventProducerService(
     ) {
         template.send(
             InstanceFlowProducerRecord
-                .builder<ErrorCollection>()
-                .topicNameParameters(instanceReceivalErrorTopicNameParameters)
+                .builder<InstanceErrorEvent>()
+                .topicNameParameters(instanceErrorTopicNameParameters)
                 .instanceFlowHeaders(headers)
-                .value(errors)
+                .value(InstanceErrorEvent(name = InstanceErrorOrigin.RECEIVAL, errors = errors))
                 .build(),
         )
     }
