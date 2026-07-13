@@ -50,8 +50,8 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-parameter-names")
     implementation("org.apache.httpcomponents.client5:httpclient5")
 
-    api("no.novari:flyt-web-resource-server:3.1.0")
-    api("no.novari:flyt-kafka:7.1.0")
+    api("no.novari:flyt-web-resource-server:3.2.0")
+    api("no.novari:flyt-kafka:7.2.0")
 
     testImplementation(kotlin("test"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
