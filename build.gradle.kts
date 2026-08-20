@@ -19,6 +19,8 @@ group = "no.novari"
 version = findProperty("version") ?: "1.0-SNAPSHOT"
 
 extra["kotlin.version"] = Versions.KOTLIN
+extra["jackson-bom.version"] = "2.21.5"
+extra["log4j2.version"] = "2.25.5"
 
 ktlint {
     version.set("1.8.0")
