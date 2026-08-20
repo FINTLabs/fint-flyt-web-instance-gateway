@@ -2,7 +2,7 @@ import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import org.springframework.boot.gradle.plugin.SpringBootPlugin
 
 object Versions {
-    const val KOTLIN = "2.4.0"
+    const val KOTLIN = "2.4.10"
 }
 
 plugins {
