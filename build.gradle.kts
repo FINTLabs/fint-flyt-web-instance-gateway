@@ -50,14 +50,18 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-parameter-names")
     implementation("org.apache.httpcomponents.client5:httpclient5")
 
-    api("no.novari:flyt-web-resource-server:4.0.0")
-    api("no.novari:flyt-kafka:7.2.0")
+    api("no.novari:flyt-web-resource-server:4.1.0-rc-2")
+    api("no.novari:flyt-kafka:7.3.0-rc-2")
 
     testImplementation(kotlin("test"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("com.ninja-squad:springmockk:5.0.1")
     testImplementation("org.mockito.kotlin:mockito-kotlin:6.2.3")
+    testImplementation("org.springframework.boot:spring-boot-starter-actuator")
+    testImplementation("io.micrometer:micrometer-tracing-bridge-otel")
+    testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
 }
 
 tasks.withType<Test>().configureEach {
