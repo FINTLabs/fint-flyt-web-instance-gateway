@@ -45,6 +45,12 @@ dependencyManagement {
 }
 
 dependencies {
+    constraints {
+        implementation("at.yawk.lz4:lz4-java:1.11.1") {
+            because("Fixes CVE-2026-59949 in the kafka-clients transitive dependency")
+        }
+    }
+
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.security:spring-security-oauth2-client")
