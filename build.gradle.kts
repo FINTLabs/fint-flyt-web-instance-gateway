@@ -2,7 +2,7 @@ import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import org.springframework.boot.gradle.plugin.SpringBootPlugin
 
 object Versions {
-    const val KOTLIN = "2.4.0"
+    const val KOTLIN = "2.4.10"
 }
 
 plugins {
@@ -19,6 +19,10 @@ group = "no.novari"
 version = findProperty("version") ?: "1.0-SNAPSHOT"
 
 extra["kotlin.version"] = Versions.KOTLIN
+extra["httpclient5.version"] = "5.6.3"
+extra["httpcore5.version"] = "5.4.3"
+extra["jackson-bom.version"] = "2.21.5"
+extra["log4j2.version"] = "2.25.5"
 
 ktlint {
     version.set("1.8.0")
@@ -41,6 +45,12 @@ dependencyManagement {
 }
 
 dependencies {
+    constraints {
+        implementation("at.yawk.lz4:lz4-java:1.11.2") {
+            because("Fixes CVE-2026-59949 in the kafka-clients transitive dependency")
+        }
+    }
+
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.security:spring-security-oauth2-client")
