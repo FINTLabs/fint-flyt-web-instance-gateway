@@ -38,6 +38,7 @@ extra["httpclient5.version"] = "5.6.3"
 extra["httpcore5.version"] = "5.4.3"
 extra["jackson-bom.version"] = "2.21.5"
 extra["log4j2.version"] = "2.25.5"
+extra["tomcat.version"] = "10.1.59"
 
 ktlint {
     version.set("1.8.0")
