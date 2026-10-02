@@ -2,23 +2,43 @@ import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import org.springframework.boot.gradle.plugin.SpringBootPlugin
 
 object Versions {
-    const val KOTLIN = "2.4.0"
+    const val KOTLIN = "2.4.10"
+}
+
+buildscript {
+    repositories {
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath(platform("com.fasterxml.jackson:jackson-bom:2.22.3"))
+        constraints {
+            classpath("org.apache.httpcomponents.client5:httpclient5:5.6.4")
+            classpath("org.apache.httpcomponents.core5:httpcore5:5.4.4")
+            classpath("org.apache.httpcomponents.core5:httpcore5-h2:5.4.4")
+            classpath("org.apache.commons:commons-lang3:3.20.0")
+        }
+    }
 }
 
 plugins {
     id("org.springframework.boot") version "3.5.16" apply false
     id("io.spring.dependency-management") version "1.1.7"
     id("maven-publish")
-    id("com.github.ben-manes.versions") version "0.54.0"
+    id("io.github.ben-manes.versions") version "0.64.0"
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
-    kotlin("jvm") version "2.4.0"
-    kotlin("plugin.spring") version "2.4.0"
+    kotlin("jvm") version "2.4.10"
+    kotlin("plugin.spring") version "2.4.10"
 }
 
 group = "no.novari"
 version = findProperty("version") ?: "1.0-SNAPSHOT"
 
 extra["kotlin.version"] = Versions.KOTLIN
+extra["httpclient5.version"] = "5.6.3"
+extra["httpcore5.version"] = "5.4.4"
+extra["jackson-bom.version"] = "2.21.7"
+extra["log4j2.version"] = "2.25.5"
+extra["tomcat.version"] = "10.1.59"
 
 ktlint {
     version.set("1.8.0")
@@ -41,6 +61,12 @@ dependencyManagement {
 }
 
 dependencies {
+    constraints {
+        implementation("at.yawk.lz4:lz4-java:1.11.3") {
+            because("Fixes CVE-2026-59949 in the kafka-clients transitive dependency")
+        }
+    }
+
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.security:spring-security-oauth2-client")
@@ -50,18 +76,14 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-parameter-names")
     implementation("org.apache.httpcomponents.client5:httpclient5")
 
-    api("no.novari:flyt-web-resource-server:4.1.0-rc-2")
-    api("no.novari:flyt-kafka:7.3.0-rc-2")
+    api("no.novari:flyt-web-resource-server:4.0.0")
+    api("no.novari:flyt-kafka:7.2.0")
 
     testImplementation(kotlin("test"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("com.ninja-squad:springmockk:5.0.1")
-    testImplementation("org.mockito.kotlin:mockito-kotlin:6.2.3")
-    testImplementation("org.springframework.boot:spring-boot-starter-actuator")
-    testImplementation("io.micrometer:micrometer-tracing-bridge-otel")
-    testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
-    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:6.4.0")
 }
 
 tasks.withType<Test>().configureEach {
