@@ -62,12 +62,12 @@ class RestClientConfiguration {
 
     @Bean
     fun fileRestClient(
+        restClientBuilder: RestClient.Builder,
         @Qualifier("fileAuthorizedClientManager") authorizedClientManager: OAuth2AuthorizedClientManager,
         @Qualifier("fileClientHttpRequestFactory") requestFactory: ClientHttpRequestFactory,
     ): RestClient {
         val interceptor = OAuth2ClientHttpRequestInterceptor(authorizedClientManager, "file-service")
-        return RestClient
-            .builder()
+        return restClientBuilder
             .requestFactory { uri: URI, method: HttpMethod -> requestFactory.createRequest(uri, method) }
             .requestInterceptor(interceptor)
             .build()
