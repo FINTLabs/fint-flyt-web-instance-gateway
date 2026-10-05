@@ -15,7 +15,7 @@ buildscript {
             classpath("org.apache.httpcomponents.client5:httpclient5:5.6.4")
             classpath("org.apache.httpcomponents.core5:httpcore5:5.4.4")
             classpath("org.apache.httpcomponents.core5:httpcore5-h2:5.4.4")
-            classpath("org.apache.commons:commons-lang3:3.20.0")
+            classpath("org.apache.commons:commons-lang3:3.21.0")
         }
     }
 }
@@ -62,7 +62,7 @@ dependencyManagement {
 
 dependencies {
     constraints {
-        implementation("at.yawk.lz4:lz4-java:1.11.3") {
+        implementation("at.yawk.lz4:lz4-java:1.12.0") {
             because("Fixes CVE-2026-59949 in the kafka-clients transitive dependency")
         }
     }
