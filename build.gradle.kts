@@ -60,6 +60,10 @@ dependencyManagement {
     }
 }
 
+dependencyLocking {
+    lockAllConfigurations()
+}
+
 dependencies {
     constraints {
         implementation("at.yawk.lz4:lz4-java:1.12.1") {
@@ -100,6 +104,11 @@ tasks.named<Jar>("jar") {
 
 java {
     withSourcesJar()
+}
+
+// Dependabot resolves with JDK 21; an explicit release keeps JVM 25 as the resolution target so gradle.lockfile gets updated.
+tasks.withType<JavaCompile>().configureEach {
+    options.release.set(25)
 }
 
 tasks.named("check") {
