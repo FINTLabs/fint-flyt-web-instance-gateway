@@ -7,6 +7,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder
+import org.springframework.boot.http.client.ClientHttpRequestFactorySettings
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
@@ -22,16 +24,17 @@ import org.springframework.web.client.RestClient
 
 class IntgrConfClientTest {
     private val baseUrl = "http://fint-flyt-intgr-conf-service:8080/afk-no/api/intern-klient"
-    private val restClientBuilder = RestClient.builder()
-    private val server = MockRestServiceServer.bindTo(restClientBuilder).build()
-    private val client =
-        IntgrConfClient(
-            InternalClientConfiguration().intgrConfRestClient(
-                restClientBuilder,
+    private val restClientBuilder =
+        InternalClientConfiguration()
+            .intgrConfRestClient(
+                RestClient.builder(),
                 testAuthorizedClientManager(),
+                ClientHttpRequestFactoryBuilder.detect(),
+                ClientHttpRequestFactorySettings.defaults(),
                 "http://fint-flyt-intgr-conf-service:8080/afk-no/",
-            ),
-        )
+            ).mutate()
+    private val server = MockRestServiceServer.bindTo(restClientBuilder).build()
+    private val client = IntgrConfClient(restClientBuilder.build())
 
     @AfterEach
     fun verify() {

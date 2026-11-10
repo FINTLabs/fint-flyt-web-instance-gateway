@@ -162,7 +162,7 @@ Optional:
 
 - `novari.flyt.intgr-conf-service-url` (default `http://fint-flyt-intgr-conf-service:8080${server.servlet.context-path:}`)
 - `novari.flyt.history-service-url` (default `http://fint-flyt-history-service:8080${server.servlet.context-path:}`)
-- `spring.http.client.connect-timeout` and `spring.http.client.read-timeout` set the timeouts for intgr-conf-service and history-service.
+- `spring.http.client.connect-timeout` (default `2s`) and `spring.http.client.read-timeout` (default `5s`) for intgr-conf-service and history-service. The defaults apply only to these two clients.
 
 The URL defaults assume the app runs with the same context path as the two services, which is the case in all FLYT overlays.
 
@@ -220,10 +220,6 @@ spring:
             provider: fint-idp
             client-id: ${fint.flyt.history.sso.client-id}
             client-secret: ${fint.flyt.history.sso.client-secret}
-  http:
-    client:
-      connect-timeout: 2s
-      read-timeout: 5s
 ```
 
 ### Upgrading from 3.x

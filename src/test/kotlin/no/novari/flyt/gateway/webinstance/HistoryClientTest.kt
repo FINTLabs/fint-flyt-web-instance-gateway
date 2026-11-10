@@ -5,6 +5,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder
+import org.springframework.boot.http.client.ClientHttpRequestFactorySettings
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
@@ -20,16 +22,17 @@ import org.springframework.web.client.RestClient
 
 class HistoryClientTest {
     private val baseUrl = "http://fint-flyt-history-service:8080/beta/afk-no/api/intern-klient"
-    private val restClientBuilder = RestClient.builder()
-    private val server = MockRestServiceServer.bindTo(restClientBuilder).build()
-    private val client =
-        HistoryClient(
-            InternalClientConfiguration().historyRestClient(
-                restClientBuilder,
+    private val restClientBuilder =
+        InternalClientConfiguration()
+            .historyRestClient(
+                RestClient.builder(),
                 testAuthorizedClientManager(),
+                ClientHttpRequestFactoryBuilder.detect(),
+                ClientHttpRequestFactorySettings.defaults(),
                 "http://fint-flyt-history-service:8080/beta/afk-no",
-            ),
-        )
+            ).mutate()
+    private val server = MockRestServiceServer.bindTo(restClientBuilder).build()
+    private val client = HistoryClient(restClientBuilder.build())
 
     @AfterEach
     fun verify() {
