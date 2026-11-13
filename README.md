@@ -168,15 +168,18 @@ The URL defaults assume the app runs with the same context path as the two servi
 
 ### OAuth clients
 
-The app needs two OAuth clients (`NamOAuthClientApplicationResource`, `client_credentials`) and three registrations:
+The app needs two OAuth clients (`NamOAuthClientApplicationResource`, `client_credentials`) and four registrations:
 
-| Registration id      | OAuth client                            | Used for                                     |
-|----------------------|-----------------------------------------|----------------------------------------------|
-| `file-service`       | `fint-flyt-file-oauth2-client`          | Uploading files                              |
-| `intgr-conf-service` | `fint-flyt-authorization-oauth2-client` | `GET /api/intern-klient/integrasjoner`       |
-| `history-service`    | `fint-flyt-authorization-oauth2-client` | `GET /api/intern-klient/archive-instance-id` |
+| Registration id         | OAuth client                            | Used for                                                                 |
+|-------------------------|-----------------------------------------|--------------------------------------------------------------------------|
+| `file-service`          | `fint-flyt-file-oauth2-client`          | Uploading files                                                          |
+| `intgr-conf-service`    | `fint-flyt-authorization-oauth2-client` | `GET /api/intern-klient/integrasjoner`                                   |
+| `history-service`       | `fint-flyt-authorization-oauth2-client` | `GET /api/intern-klient/archive-instance-id`                             |
+| `authorization-service` | `fint-flyt-authorization-oauth2-client` | Source application authorization in flyt-web-resource-server (`/api/**`) |
 
-The registration ids are fixed. A 404 from intgr-conf-service or history-service is returned as `null`. Other errors are thrown.
+The registration ids are fixed. A 404 from intgr-conf-service or history-service is returned as `null`. Other errors are
+thrown. See the [flyt-web-resource-server README](https://github.com/FINTLabs/fint-flyt-web-resource-server) for
+`authorization-service`.
 
 `fint-flyt-authorization-oauth2-client` is the shared OAuth client for internal calls between FLYT services, because
 namerator does not create new NAM clients. The registrations stay separate per target service, so each can get its own
@@ -232,12 +235,18 @@ spring:
             provider: fint-idp
             client-id: ${fint.flyt.authorization.sso.client-id}
             client-secret: ${fint.flyt.authorization.sso.client-secret}
+          authorization-service:
+            authorization-grant-type: client_credentials
+            provider: fint-idp
+            client-id: ${fint.flyt.authorization.sso.client-id}
+            client-secret: ${fint.flyt.authorization.sso.client-secret}
 ```
 
 ### Upgrading from 3.x
 
 - `IntegrationRequestProducerService` and `ArchiveCaseIdRequestService` are removed. Use `IntgrConfClient` and `HistoryClient.getArchiveInstanceId(sourceApplicationId, sourceApplicationInstanceId)`.
-- Add `fint-flyt-authorization-oauth2-client` and the registrations above.
+- Add `fint-flyt-authorization-oauth2-client` and the registrations above. flyt-web-resource-server 5 needs
+  `authorization-service`, or the gateway fails at startup. See its README for the other changes in 5.x.
 - The gateway no longer uses Kafka request/reply, so `novari.kafka.reply-topic.*` has no effect.
 
 ## Dependency Locking
