@@ -39,7 +39,7 @@ C4Context
 
 ## C4 level 2: Containers
 
-One Spring Boot application with no database. Every HTTP call to an internal API uses its own OAuth client and a token from NAM: `file-service`, `intgr-conf-service` and `history-service`.
+One Spring Boot application with no database. Every HTTP call to an internal API uses its own registration and a token from NAM: `file-service`, `intgr-conf-service` and `history-service`. The registrations use two OAuth clients: `fint-flyt-file-oauth2-client` for file-service, and the shared `fint-flyt-authorization-oauth2-client` for intgr-conf-service and history-service.
 
 ```mermaid
 C4Container
