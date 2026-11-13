@@ -7,11 +7,16 @@ import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder
 import org.springframework.boot.http.client.ClientHttpRequestFactorySettings
 import org.springframework.context.annotation.Bean
 import org.springframework.http.client.ClientHttpRequestFactory
+import org.springframework.http.converter.FormHttpMessageConverter
 import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService
+import org.springframework.security.oauth2.client.endpoint.RestClientClientCredentialsTokenResponseClient
+import org.springframework.security.oauth2.client.http.OAuth2ErrorResponseErrorHandler
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
 import org.springframework.security.oauth2.client.web.client.OAuth2ClientHttpRequestInterceptor
+import org.springframework.security.oauth2.core.http.converter.OAuth2AccessTokenResponseHttpMessageConverter
 import org.springframework.web.client.RestClient
 import java.time.Duration
 
@@ -26,11 +31,32 @@ class InternalClientConfiguration {
     fun internalClientAuthorizedClientManager(
         clientRegistrationRepository: ClientRegistrationRepository,
         authorizedClientService: OAuth2AuthorizedClientService,
-    ): OAuth2AuthorizedClientManager =
-        AuthorizedClientServiceOAuth2AuthorizedClientManager(
-            clientRegistrationRepository,
-            authorizedClientService,
+        requestFactoryBuilder: ClientHttpRequestFactoryBuilder<*>,
+        requestFactorySettings: ClientHttpRequestFactorySettings,
+    ): OAuth2AuthorizedClientManager {
+        // The default token client has no timeouts. Same converters and error handler as its default, plus ours.
+        val tokenResponseClient = RestClientClientCredentialsTokenResponseClient()
+        tokenResponseClient.setRestClient(
+            RestClient
+                .builder()
+                .requestFactory(requestFactoryBuilder.build(requestFactorySettings.withDefaultTimeouts()))
+                .messageConverters { converters ->
+                    converters.clear()
+                    converters.add(FormHttpMessageConverter())
+                    converters.add(OAuth2AccessTokenResponseHttpMessageConverter())
+                }.defaultStatusHandler(OAuth2ErrorResponseErrorHandler())
+                .build(),
         )
+        val manager =
+            AuthorizedClientServiceOAuth2AuthorizedClientManager(clientRegistrationRepository, authorizedClientService)
+        manager.setAuthorizedClientProvider(
+            OAuth2AuthorizedClientProviderBuilder
+                .builder()
+                .clientCredentials { it.accessTokenResponseClient(tokenResponseClient) }
+                .build(),
+        )
+        return manager
+    }
 
     @Bean
     fun intgrConfRestClient(

@@ -3,10 +3,13 @@ package no.novari.flyt.gateway.webinstance.config
 import no.novari.flyt.gateway.webinstance.testAuthorizedClientManager
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.assertThrows
 import org.mockito.kotlin.mock
 import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.autoconfigure.http.client.HttpClientAutoConfiguration
+import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientAutoConfiguration
+import org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration
 import org.springframework.boot.test.context.assertj.AssertableApplicationContext
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager
@@ -81,6 +84,38 @@ class InternalClientConfigurationTest {
 
                 assertThat(elapsed).isLessThan(Duration.ofSeconds(2))
             }
+    }
+
+    @Test
+    @Timeout(30) // Without a token timeout the call hangs forever.
+    fun `token request to NAM times out after 5 seconds by default`() {
+        // The socket accepts the connection but never answers, like a hanging NAM.
+        ServerSocket(0).use { nam ->
+            ApplicationContextRunner()
+                .withConfiguration(
+                    AutoConfigurations.of(
+                        OAuth2ClientAutoConfiguration::class.java,
+                        HttpClientAutoConfiguration::class.java,
+                        RestClientAutoConfiguration::class.java,
+                    ),
+                ).withUserConfiguration(InternalClientConfiguration::class.java)
+                .withPropertyValues(
+                    "spring.security.oauth2.client.provider.fint-idp.token-uri=http://localhost:${nam.localPort}/token",
+                    "spring.security.oauth2.client.registration.history-service.provider=fint-idp",
+                    "spring.security.oauth2.client.registration.history-service.authorization-grant-type=" +
+                        "client_credentials",
+                    "spring.security.oauth2.client.registration.history-service.client-id=client",
+                    "spring.security.oauth2.client.registration.history-service.client-secret=secret",
+                ).run { context ->
+                    assertThat(context).hasNotFailed()
+                    val client = context.getBean("historyRestClient", RestClient::class.java)
+                    val start = System.nanoTime()
+                    assertThrows<RuntimeException> { client.getX() }
+                    val elapsed = Duration.ofNanos(System.nanoTime() - start)
+
+                    assertThat(elapsed).isBetween(Duration.ofSeconds(4), Duration.ofSeconds(10))
+                }
+        }
     }
 
     private fun AssertableApplicationContext.expectGet(
