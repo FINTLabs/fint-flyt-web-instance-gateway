@@ -5,7 +5,6 @@ import no.novari.flyt.gateway.webinstance.exception.IntegrationDeactivatedExcept
 import no.novari.flyt.gateway.webinstance.exception.MultipartFileUploadException
 import no.novari.flyt.gateway.webinstance.exception.NoIntegrationException
 import no.novari.flyt.gateway.webinstance.kafka.InstanceErrorEventProducerService
-import no.novari.flyt.gateway.webinstance.kafka.IntegrationRequestProducerService
 import no.novari.flyt.gateway.webinstance.kafka.ReceivedInstanceEventProducerService
 import no.novari.flyt.gateway.webinstance.model.Integration
 import no.novari.flyt.gateway.webinstance.model.MultipartFileReference
@@ -27,7 +26,7 @@ import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
 class MultipartInstanceProcessor<T : Any>(
-    private val integrationRequestProducerService: IntegrationRequestProducerService,
+    private val intgrConfClient: IntgrConfClient,
     private val instanceValidationService: InstanceValidationService,
     private val receivedInstanceEventProducerService: ReceivedInstanceEventProducerService,
     private val instanceErrorEventProducerService: InstanceErrorEventProducerService,
@@ -101,8 +100,8 @@ class MultipartInstanceProcessor<T : Any>(
 
             if (checkIntegrationExists) {
                 val integration =
-                    integrationRequestProducerService
-                        .get(idPair)
+                    intgrConfClient
+                        .getIntegration(idPair)
                         ?: throw NoIntegrationException(idPair)
                 headersBuilder.integrationId(integration.id)
                 if (integration.state == Integration.State.DEACTIVATED) {

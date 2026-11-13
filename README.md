@@ -4,10 +4,13 @@ Spring Boot library for building FINT Flyt web-instance gateways. It validates a
 
 ## Features
 - Validates incoming payloads with Jakarta Bean Validation and emits mapped error events.
-- Looks up integrations and enforces deactivated/unknown integration rules.
+- Looks up integrations in intgr-conf-service over HTTP and enforces deactivated/unknown integration rules.
+- `HistoryClient` looks up the archive instance ID of an instance in history-service over HTTP.
 - Uploads files with OAuth2 client credentials and retry logic.
 - Publishes instance-received and instance-receival-error events to Kafka.
-- Provides autoconfiguration for Kafka topic setup and the file-service RestClient.
+- Provides autoconfiguration for Kafka topic setup and the RestClients for file-service, intgr-conf-service and history-service.
+
+Architecture (C4 level 1 to 3): [docs/architecture.md](docs/architecture.md).
 
 ## Installation
 Gradle (Kotlin DSL):
@@ -157,22 +160,94 @@ Optional:
 - `novari.flyt.web-instance-gateway.kafka.topic.instance-receival-error.cleanup-frequency` (default `NORMAL`)
 - `novari.flyt.web-instance-gateway.kafka.topic.instance-receival-error.partitions` (default `1`)
 
-OAuth2 client setup (registration id must be `file-service`):
+- `novari.flyt.intgr-conf-service-url` (default `http://fint-flyt-intgr-conf-service:8080${server.servlet.context-path:}`)
+- `novari.flyt.history-service-url` (default `http://fint-flyt-history-service:8080${server.servlet.context-path:}`)
+- `spring.http.client.connect-timeout` (default `2s`) and `spring.http.client.read-timeout` (default `5s`) for intgr-conf-service, history-service and the token request to NAM. The defaults apply only to these.
+
+The URL defaults assume the app runs with the same context path as the two services, which is the case in all FLYT overlays.
+
+### OAuth clients
+
+The app needs two OAuth clients (`NamOAuthClientApplicationResource`, `client_credentials`) and four registrations:
+
+| Registration id         | OAuth client                            | Used for                                                                 |
+|-------------------------|-----------------------------------------|--------------------------------------------------------------------------|
+| `file-service`          | `fint-flyt-file-oauth2-client`          | Uploading files                                                          |
+| `intgr-conf-service`    | `fint-flyt-authorization-oauth2-client` | `GET /api/intern-klient/integrasjoner`                                   |
+| `history-service`       | `fint-flyt-authorization-oauth2-client` | `GET /api/intern-klient/archive-instance-id`                             |
+| `authorization-service` | `fint-flyt-authorization-oauth2-client` | Source application authorization in flyt-web-resource-server (`/api/**`) |
+
+The registration ids are fixed. A 404 from intgr-conf-service or history-service is returned as `null`. Other errors are
+thrown. See the [flyt-web-resource-server README](https://github.com/FINTLabs/fint-flyt-web-resource-server) for
+`authorization-service`.
+
+`fint-flyt-authorization-oauth2-client` is the shared OAuth client for internal calls between FLYT services, because
+namerator does not create new NAM clients. The registrations stay separate per target service, so each can get its own
+client later by changing configuration only.
+
+Every NAM secret has the keys `fint.sso.client-id` and `fint.sso.client-secret`. Load the file-service client with
+`envFrom` and map the shared client to its own property names with `secretKeyRef`, so the values do not collide:
+
+```yaml
+envFrom:
+  - secretRef:
+      name: fint-flyt-file-oauth2-client
+env:
+  - name: fint.flyt.authorization.sso.client-id
+    valueFrom:
+      secretKeyRef:
+        name: fint-flyt-authorization-oauth2-client
+        key: fint.sso.client-id
+  - name: fint.flyt.authorization.sso.client-secret
+    valueFrom:
+      secretKeyRef:
+        name: fint-flyt-authorization-oauth2-client
+        key: fint.sso.client-secret
+```
+
+In `ra-no` the shared client comes from 1Password with the keys `fint.flyt.authorization.sso.client-id` and
+`fint.flyt.authorization.sso.client-secret`, so the overlay must patch `secretKeyRef.key`.
+
+Do not use `clientIdProperty` on the NAM resource. The services declare the same resource and read `fint.sso.client-id`
+from it.
 
 ```yaml
 spring:
   security:
     oauth2:
       client:
+        provider:
+          fint-idp:
+            token-uri: https://idp.felleskomponent.no/nidp/oauth/nam/token?resourceServer=fint-api
         registration:
           file-service:
-            client-id: your-client-id
-            client-secret: your-client-secret
             authorization-grant-type: client_credentials
-        provider:
-          file-service:
-            token-uri: https://auth.example.com/oauth/token
+            provider: fint-idp
+            client-id: ${fint.sso.client-id}
+            client-secret: ${fint.sso.client-secret}
+          intgr-conf-service:
+            authorization-grant-type: client_credentials
+            provider: fint-idp
+            client-id: ${fint.flyt.authorization.sso.client-id}
+            client-secret: ${fint.flyt.authorization.sso.client-secret}
+          history-service:
+            authorization-grant-type: client_credentials
+            provider: fint-idp
+            client-id: ${fint.flyt.authorization.sso.client-id}
+            client-secret: ${fint.flyt.authorization.sso.client-secret}
+          authorization-service:
+            authorization-grant-type: client_credentials
+            provider: fint-idp
+            client-id: ${fint.flyt.authorization.sso.client-id}
+            client-secret: ${fint.flyt.authorization.sso.client-secret}
 ```
+
+### Upgrading from 3.x
+
+- `IntegrationRequestProducerService` and `ArchiveCaseIdRequestService` are removed. Use `IntgrConfClient` and `HistoryClient.getArchiveInstanceId(sourceApplicationId, sourceApplicationInstanceId)`.
+- Add `fint-flyt-authorization-oauth2-client` and the registrations above. flyt-web-resource-server 5 needs
+  `authorization-service`, or the gateway fails at startup. See its README for the other changes in 5.x.
+- The gateway no longer uses Kafka request/reply, so `novari.kafka.reply-topic.*` has no effect.
 
 ## Dependency Locking
 
