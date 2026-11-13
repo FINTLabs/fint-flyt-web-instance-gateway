@@ -168,33 +168,45 @@ The URL defaults assume the app runs with the same context path as the two servi
 
 ### OAuth clients
 
-The app needs three OAuth clients (`NamOAuthClientApplicationResource`, `client_credentials`), each with its own registration:
+The app needs two OAuth clients (`NamOAuthClientApplicationResource`, `client_credentials`) and three registrations:
 
-| Registration id      | OAuth client                         | Used for                                     |
-|----------------------|--------------------------------------|----------------------------------------------|
-| `file-service`       | `fint-flyt-file-oauth2-client`       | Uploading files                              |
-| `intgr-conf-service` | `fint-flyt-intgr-conf-oauth2-client` | `GET /api/intern-klient/integrasjoner`       |
-| `history-service`    | `fint-flyt-history-oauth2-client`    | `GET /api/intern-klient/archive-instance-id` |
+| Registration id      | OAuth client                            | Used for                                     |
+|----------------------|-----------------------------------------|----------------------------------------------|
+| `file-service`       | `fint-flyt-file-oauth2-client`          | Uploading files                              |
+| `intgr-conf-service` | `fint-flyt-authorization-oauth2-client` | `GET /api/intern-klient/integrasjoner`       |
+| `history-service`    | `fint-flyt-authorization-oauth2-client` | `GET /api/intern-klient/archive-instance-id` |
 
 The registration ids are fixed. A 404 from intgr-conf-service or history-service is returned as `null`. Other errors are thrown.
 
-Every NAM secret has the keys `fint.sso.client-id` and `fint.sso.client-secret`. Only one of them can be loaded with `envFrom`; map the others to their own property names with `secretKeyRef`, so the values do not collide:
+`fint-flyt-authorization-oauth2-client` is the shared OAuth client for internal calls between FLYT services, because
+namerator does not create new NAM clients. The registrations stay separate per target service, so each can get its own
+client later by changing configuration only.
+
+Every NAM secret has the keys `fint.sso.client-id` and `fint.sso.client-secret`. Load the file-service client with
+`envFrom` and map the shared client to its own property names with `secretKeyRef`, so the values do not collide:
 
 ```yaml
 envFrom:
   - secretRef:
       name: fint-flyt-file-oauth2-client
 env:
-  - name: fint.flyt.intgr-conf.sso.client-id
+  - name: fint.flyt.authorization.sso.client-id
     valueFrom:
       secretKeyRef:
-        name: fint-flyt-intgr-conf-oauth2-client
+        name: fint-flyt-authorization-oauth2-client
         key: fint.sso.client-id
-  # same for fint.flyt.intgr-conf.sso.client-secret,
-  # fint.flyt.history.sso.client-id and fint.flyt.history.sso.client-secret
+  - name: fint.flyt.authorization.sso.client-secret
+    valueFrom:
+      secretKeyRef:
+        name: fint-flyt-authorization-oauth2-client
+        key: fint.sso.client-secret
 ```
 
-Do not use `clientIdProperty` on the NAM resource for these two clients. intgr-conf-service and history-service declare the same resource and read `fint.sso.client-id` from it.
+In `ra-no` the shared client comes from 1Password with the keys `fint.flyt.authorization.sso.client-id` and
+`fint.flyt.authorization.sso.client-secret`, so the overlay must patch `secretKeyRef.key`.
+
+Do not use `clientIdProperty` on the NAM resource. The services declare the same resource and read `fint.sso.client-id`
+from it.
 
 ```yaml
 spring:
@@ -213,19 +225,19 @@ spring:
           intgr-conf-service:
             authorization-grant-type: client_credentials
             provider: fint-idp
-            client-id: ${fint.flyt.intgr-conf.sso.client-id}
-            client-secret: ${fint.flyt.intgr-conf.sso.client-secret}
+            client-id: ${fint.flyt.authorization.sso.client-id}
+            client-secret: ${fint.flyt.authorization.sso.client-secret}
           history-service:
             authorization-grant-type: client_credentials
             provider: fint-idp
-            client-id: ${fint.flyt.history.sso.client-id}
-            client-secret: ${fint.flyt.history.sso.client-secret}
+            client-id: ${fint.flyt.authorization.sso.client-id}
+            client-secret: ${fint.flyt.authorization.sso.client-secret}
 ```
 
 ### Upgrading from 3.x
 
 - `IntegrationRequestProducerService` and `ArchiveCaseIdRequestService` are removed. Use `IntgrConfClient` and `HistoryClient.getArchiveInstanceId(sourceApplicationId, sourceApplicationInstanceId)`.
-- Add the two OAuth clients and registrations above.
+- Add `fint-flyt-authorization-oauth2-client` and the registrations above.
 - The gateway no longer uses Kafka request/reply, so `novari.kafka.reply-topic.*` has no effect.
 
 ## Dependency Locking
