@@ -10,12 +10,12 @@ buildscript {
         gradlePluginPortal()
     }
     dependencies {
-        classpath(platform("com.fasterxml.jackson:jackson-bom:2.22.4"))
+        classpath(platform("com.fasterxml.jackson:jackson-bom:2.23.0"))
         constraints {
             classpath("org.apache.httpcomponents.client5:httpclient5:5.6.5")
             classpath("org.apache.httpcomponents.core5:httpcore5:5.4.4")
             classpath("org.apache.httpcomponents.core5:httpcore5-h2:5.4.4")
-            classpath("org.apache.commons:commons-lang3:3.21.0")
+            classpath("org.apache.commons:commons-lang3:3.22.0")
         }
     }
 }
@@ -66,7 +66,7 @@ dependencyLocking {
 
 dependencies {
     constraints {
-        implementation("at.yawk.lz4:lz4-java:1.13.0") {
+        implementation("at.yawk.lz4:lz4-java:1.14.0") {
             because("Fixes CVE-2026-59949 in the kafka-clients transitive dependency")
         }
         implementation("org.xerial.snappy:snappy-java:1.1.10.12") {
