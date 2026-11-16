@@ -12,23 +12,39 @@ import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2Clien
 import org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration
 import org.springframework.boot.test.context.assertj.AssertableApplicationContext
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
+import org.springframework.http.HttpHeaders
+import org.springframework.security.authentication.TestingAuthenticationToken
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager
+import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService
+import org.springframework.security.oauth2.client.registration.ClientRegistration
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
+import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository
+import org.springframework.security.oauth2.core.AuthorizationGrantType
+import org.springframework.security.oauth2.core.OAuth2AccessToken
+import org.springframework.test.web.client.ExpectedCount
 import org.springframework.test.web.client.MockRestServiceServer
+import org.springframework.test.web.client.match.MockRestRequestMatchers.header
 import org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo
 import org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess
 import org.springframework.web.client.ResourceAccessException
 import org.springframework.web.client.RestClient
 import java.net.ServerSocket
 import java.time.Duration
+import java.time.Instant
+import java.util.concurrent.atomic.AtomicInteger
 
 class InternalClientConfigurationTest {
     private val contextRunner =
         ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(HttpClientAutoConfiguration::class.java))
             .withUserConfiguration(InternalClientConfiguration::class.java)
-            .withBean(RestClient.Builder::class.java, { RestClient.builder() })
+            // Prototype, like Boot's builder, so the clients do not share interceptors.
+            .withBean(RestClient.Builder::class.java, { RestClient.builder() }, { it.scope = "prototype" })
             .withBean(ClientRegistrationRepository::class.java, { mock<ClientRegistrationRepository>() })
             .withBean(OAuth2AuthorizedClientService::class.java, { mock<OAuth2AuthorizedClientService>() })
             .withBean(
@@ -63,6 +79,64 @@ class InternalClientConfigurationTest {
             ).run { context ->
                 context.expectGet("intgrConfRestClient", "http://localhost:8095/api/intern-klient/x")
                 context.expectGet("historyRestClient", "http://localhost:8096/api/intern-klient/x")
+            }
+    }
+
+    @Test
+    fun `callers share one token per registration`() {
+        val registration =
+            ClientRegistration
+                .withRegistrationId("history-service")
+                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                .clientId("client")
+                .tokenUri("http://idp/token")
+                .build()
+        val registrations = InMemoryClientRegistrationRepository(registration)
+        val tokenRequests = AtomicInteger()
+        val manager =
+            AuthorizedClientServiceOAuth2AuthorizedClientManager(
+                registrations,
+                InMemoryOAuth2AuthorizedClientService(registrations),
+            )
+        manager.setAuthorizedClientProvider(
+            OAuth2AuthorizedClientProvider { context ->
+                context.authorizedClient ?: OAuth2AuthorizedClient(
+                    context.clientRegistration,
+                    context.principal.name,
+                    OAuth2AccessToken(
+                        OAuth2AccessToken.TokenType.BEARER,
+                        "token-${tokenRequests.incrementAndGet()}",
+                        Instant.now(),
+                        Instant.now().plusSeconds(60),
+                    ),
+                )
+            },
+        )
+
+        contextRunner
+            .withBean("internalClientAuthorizedClientManager", OAuth2AuthorizedClientManager::class.java, { manager })
+            .run { context ->
+                val builder = context.getBean("historyRestClient", RestClient::class.java).mutate()
+                val server = MockRestServiceServer.bindTo(builder).build()
+                server
+                    .expect(
+                        ExpectedCount.twice(),
+                        requestTo("http://fint-flyt-history-service:8080/api/intern-klient/x"),
+                    ).andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer token-1"))
+                    .andRespond(withSuccess())
+                val client = builder.build()
+
+                try {
+                    listOf("source-application-a", "source-application-b").forEach { caller ->
+                        SecurityContextHolder.getContext().authentication = TestingAuthenticationToken(caller, null)
+                        client.getX()
+                    }
+                } finally {
+                    SecurityContextHolder.clearContext()
+                }
+
+                server.verify()
+                assertThat(tokenRequests).hasValue(1)
             }
     }
 

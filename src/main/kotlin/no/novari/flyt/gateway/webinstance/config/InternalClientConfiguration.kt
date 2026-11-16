@@ -8,6 +8,8 @@ import org.springframework.boot.http.client.ClientHttpRequestFactorySettings
 import org.springframework.context.annotation.Bean
 import org.springframework.http.client.ClientHttpRequestFactory
 import org.springframework.http.converter.FormHttpMessageConverter
+import org.springframework.security.authentication.AnonymousAuthenticationToken
+import org.springframework.security.core.authority.AuthorityUtils
 import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder
@@ -105,6 +107,8 @@ class InternalClientConfiguration {
     ): RestClient {
         val interceptor = OAuth2ClientHttpRequestInterceptor(authorizedClientManager)
         interceptor.setClientRegistrationIdResolver { clientRegistrationId }
+        // The default resolves the incoming caller, which would fetch one token per source application.
+        interceptor.setPrincipalResolver { APP_PRINCIPAL }
         return restClientBuilder
             .baseUrl("${baseUrl.trimEnd('/')}/api/intern-klient")
             .requestFactory(requestFactory)
@@ -118,6 +122,12 @@ class InternalClientConfiguration {
         withTimeouts(connectTimeout() ?: DEFAULT_CONNECT_TIMEOUT, readTimeout() ?: DEFAULT_READ_TIMEOUT)
 
     private companion object {
+        val APP_PRINCIPAL =
+            AnonymousAuthenticationToken(
+                "anonymous",
+                "anonymousUser",
+                AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS"),
+            )
         val DEFAULT_CONNECT_TIMEOUT: Duration = Duration.ofSeconds(2)
         val DEFAULT_READ_TIMEOUT: Duration = Duration.ofSeconds(5)
     }
