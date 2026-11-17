@@ -1,10 +1,10 @@
 package no.novari.flyt.gateway.instance
 
 import no.novari.flyt.gateway.webinstance.FileClient
+import no.novari.flyt.gateway.webinstance.IntgrConfClient
 import no.novari.flyt.gateway.webinstance.MultipartInstanceMapper
 import no.novari.flyt.gateway.webinstance.MultipartInstanceProcessor
 import no.novari.flyt.gateway.webinstance.kafka.InstanceErrorEventProducerService
-import no.novari.flyt.gateway.webinstance.kafka.IntegrationRequestProducerService
 import no.novari.flyt.gateway.webinstance.kafka.ReceivedInstanceEventProducerService
 import no.novari.flyt.gateway.webinstance.model.Integration
 import no.novari.flyt.gateway.webinstance.model.MultipartFileReference
@@ -36,7 +36,7 @@ import kotlin.test.assertEquals
 
 class MultipartInstanceProcessorTest {
     @Mock
-    private lateinit var integrationRequestProducerService: IntegrationRequestProducerService
+    private lateinit var intgrConfClient: IntgrConfClient
 
     @Mock
     private lateinit var instanceValidationService: InstanceValidationService
@@ -77,7 +77,7 @@ class MultipartInstanceProcessorTest {
         val mockIntegration = mock<Integration>()
         whenever(mockIntegration.id).thenReturn(1L)
         whenever(mockIntegration.state).thenReturn(Integration.State.ACTIVE)
-        whenever(integrationRequestProducerService.get(any()))
+        whenever(intgrConfClient.getIntegration(any()))
             .thenReturn(mockIntegration)
 
         whenever(sourceApplicationAuthorizationService.getSourceApplicationId(any()))
@@ -92,7 +92,7 @@ class MultipartInstanceProcessorTest {
 
         multipartInstanceProcessor =
             MultipartInstanceProcessor(
-                integrationRequestProducerService = integrationRequestProducerService,
+                intgrConfClient = intgrConfClient,
                 instanceValidationService = instanceValidationService,
                 receivedInstanceEventProducerService = receivedInstanceEventProducerService,
                 instanceErrorEventProducerService = instanceErrorEventProducerService,
