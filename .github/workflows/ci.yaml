@@ -8,4 +8,4 @@ on:
 
 jobs:
   build:
-    uses: FINTLabs/fint-flyt-github-workflows/.github/workflows/java-library-ci.yaml@main
+    uses: FINTLabs/fint-flyt-github-workflows/.github/workflows/java-library-ci.yaml@1508232829d2478b588e004c224c804a955e2a9a # v1.0.0
